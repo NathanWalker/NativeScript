@@ -27,7 +27,6 @@ module.exports = function(grunt) {
     }
 
     grunt.initConfig({
-//        pkg: grunt.file.readJSON('package.json'),
         copy: {
             package: {
                 src: "../../bin/dist/tns-core-modules*.tgz",
@@ -65,6 +64,12 @@ module.exports = function(grunt) {
                 options: {
                     process: isDiff
                 }
+            },
+            packeddeclarations: {
+                expand: true,
+                src: "./*.tgz",
+                dest: "./",
+                cwd: "./diffs"
             }
         },
         shell: {
@@ -79,6 +84,14 @@ module.exports = function(grunt) {
             },
             createDiffsDir: {
                 command: "mkdir ./diffs"
+            },
+            packdeclarations: {
+                command: "npm pack",
+                options: {
+                    execOptions: {
+                        cwd: "./diffs"
+                    }
+                }
             }
         },
         clean: {
@@ -121,7 +134,8 @@ module.exports = function(grunt) {
         "clean:extractedDir",
         "clean:actualsDir",
         "copy:packagejson",
-//        "shell:packdeclarations",
-//        "copy:packeddeclarations"
+        "shell:packdeclarations",
+        "copy:packeddeclarations",
+        "clean:diffsDir",
     ]);
 }
