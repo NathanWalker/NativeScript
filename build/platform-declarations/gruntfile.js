@@ -2,6 +2,12 @@ module.exports = function(grunt) {
 
     var fsModule = require("fs");
 
+    function cleanDeps(content, srcPath) {
+        var contentAsJson = JSON.parse(content);
+        delete contentAsJson.devDependencies;
+        return JSON.stringify(contentAsJson, null, "\t");
+    }
+
     function isDiff(content, srcPath) {
         var relativePath = srcPath.replace(/actuals\//, "");
         var extractedRelativePath = "extracted/package/" + relativePath;
@@ -16,7 +22,7 @@ module.exports = function(grunt) {
             }
             return content;
         }
-        
+
         return false;
     }
 
@@ -26,6 +32,14 @@ module.exports = function(grunt) {
             package: {
                 src: "../../bin/dist/tns-core-modules*.tgz",
                 dest: "./tns-core-modules.tgz"
+            },
+            packagejson: {
+                expand: true,
+                src: "./package.json",
+                dest: "./diffs/",
+                options: {
+                    process: cleanDeps
+                }
             },
             actualDeclaraions: {
                 expand: true,
@@ -105,6 +119,9 @@ module.exports = function(grunt) {
         "shell:createDiffsDir",
         "copy:differentNoPrivateFiles",
         "clean:extractedDir",
-        "clean:actualsDir"
+        "clean:actualsDir",
+        "copy:packagejson",
+//        "shell:packdeclarations",
+//        "copy:packeddeclarations"
     ]);
 }
