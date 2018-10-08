@@ -357,20 +357,15 @@ export class View extends ViewCommon {
     }
 
     private setOnTouchListener() {
-        if (!this.nativeViewProtected || !this.hasGestureObservers()) {
-            return;
-        }
-        
-        // do not set noop listener that handles the event (disabled listener) if IsUserInteractionEnabled is
-        // false as we might need the ability for the event to pass through to a parent view
-        initializeTouchListener();
-        this.touchListener = this.touchListener || new TouchListener(this);
-        this.nativeViewProtected.setOnTouchListener(this.touchListener);
+        if (this.nativeViewProtected && this.hasGestureObservers()) {
+            this.touchListenerIsSet = true;
+            if (this.nativeViewProtected.setClickable) {
+                this.nativeViewProtected.setClickable(true);
+            }
 
-        this.touchListenerIsSet = true;
-
-        if (this.nativeViewProtected.setClickable) {
-            this.nativeViewProtected.setClickable(this.isUserInteractionEnabled);
+            initializeTouchListener();
+            this.touchListener = this.touchListener || new TouchListener(this);
+            this.nativeViewProtected.setOnTouchListener(this.touchListener);
         }
     }
 
@@ -610,8 +605,15 @@ export class View extends ViewCommon {
     }
 
     [isUserInteractionEnabledProperty.setNative](value: boolean) {
-        if (this.nativeViewProtected.setClickable) {
-            this.nativeViewProtected.setClickable(value);
+        if (!value) {
+            initializeDisabledListener();
+            // User interaction is disabled -- we stop it and we do not care whether someone wants to listen for gestures.
+            this.nativeViewProtected.setOnTouchListener(disableUserInteractionListener);
+        } else {
+            this.setOnTouchListener();
+            if (!this.touchListenerIsSet) {
+                this.nativeViewProtected.setOnTouchListener(null);
+            }
         }
     }
 

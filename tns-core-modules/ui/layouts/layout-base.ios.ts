@@ -1,6 +1,4 @@
-﻿import { 
-    LayoutBaseCommon, clipToBoundsProperty, isPassThroughParentEnabledProperty, View 
-} from "./layout-base-common";
+﻿import { LayoutBaseCommon, clipToBoundsProperty, View } from "./layout-base-common";
 
 export * from "./layout-base-common";
 
@@ -35,9 +33,5 @@ export class LayoutBase extends LayoutBaseCommon {
     }
     [clipToBoundsProperty.setNative](value: boolean) {
         this._setNativeClipToBounds();
-    }
-
-    [isPassThroughParentEnabledProperty.setNative](value: boolean) {
-        (<any>this.nativeViewProtected).setPassThroughParent(value);
     }
 }

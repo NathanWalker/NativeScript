@@ -531,10 +531,6 @@ export class FrameBase extends CustomLayoutView implements FrameDefinition {
     public _onLivesync(): boolean {
         super._onLivesync();
 
-        if (!this._currentEntry || !this._currentEntry.entry) {
-            return false;
-        }
-
         const currentEntry = this._currentEntry.entry;
         const newEntry: NavigationEntry = {
             animated: false,

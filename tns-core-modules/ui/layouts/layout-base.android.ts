@@ -1,5 +1,5 @@
 ﻿import {
-    LayoutBaseCommon, clipToBoundsProperty, isPassThroughParentEnabledProperty,
+    LayoutBaseCommon, clipToBoundsProperty,
     paddingLeftProperty, paddingTopProperty, paddingRightProperty, paddingBottomProperty, Length
 } from "./layout-base-common";
 
@@ -23,10 +23,6 @@ export class LayoutBase extends LayoutBaseCommon {
         // The following article explains this in detail:
         // http://stackoverflow.com/questions/25044085/when-drawing-outside-the-view-clip-bounds-with-android-how-do-i-prevent-underli
         console.warn(`clipToBounds with value false is not supported on Android. You can use this.android.getParent().setClipChildren(false) as an alternative`);
-    }
-
-    [isPassThroughParentEnabledProperty.setNative](value: boolean) {
-        (<any>this.nativeViewProtected).setPassThroughParent(value);
     }
 
     [paddingTopProperty.getDefault](): Length {
