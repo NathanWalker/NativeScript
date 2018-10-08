@@ -1,7 +1,7 @@
 ﻿import { TabView as TabViewDefinition, TabViewItem as TabViewItemDefinition, SelectedIndexChangedEventData } from ".";
 import {
     View, ViewBase, Style, Property, CssProperty, CoercibleProperty,
-    Color, isIOS, AddArrayFromBuilder, AddChildFromBuilder, EventData, CSSType
+    Color, isIOS, AddArrayFromBuilder, AddChildFromBuilder, EventData, CSSType, booleanConverter
 } from "../core/view";
 
 export * from "../core/view";
@@ -246,6 +246,12 @@ androidOffscreenTabLimitProperty.register(TabViewBase);
 
 export const androidTabsPositionProperty = new Property<TabViewBase, "top" | "bottom">({ name: "androidTabsPosition", defaultValue: "top" });
 androidTabsPositionProperty.register(TabViewBase);
+
+export const androidMeasureBasedOnLargestProperty = new Property<TabViewBase, boolean>({
+  name: "androidMeasureBasedOnLargest", defaultValue: false,
+  valueConverter: booleanConverter
+});
+androidMeasureBasedOnLargestProperty.register(TabViewBase);
 
 export const tabTextFontSizeProperty = new CssProperty<Style, number>({ name: "tabTextFontSize", cssName: "tab-text-font-size", valueConverter: (v) => parseFloat(v) });
 tabTextFontSizeProperty.register(Style);

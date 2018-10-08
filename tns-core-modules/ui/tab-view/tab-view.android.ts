@@ -4,7 +4,7 @@ import { Font } from "../styling/font";
 import {
     TabViewBase, TabViewItemBase, itemsProperty, selectedIndexProperty,
     tabTextColorProperty, tabBackgroundColorProperty, tabTextFontSizeProperty, selectedTabTextColorProperty,
-    androidSelectedTabHighlightColorProperty, androidOffscreenTabLimitProperty,
+    androidSelectedTabHighlightColorProperty, androidOffscreenTabLimitProperty, androidMeasureBasedOnLargestProperty,
     fontSizeProperty, fontInternalProperty, layout, traceCategory, traceEnabled,
     traceWrite, Color
 } from "./tab-view-common"
@@ -119,23 +119,25 @@ function initializeNativeClasses() {
         }
 
         instantiateItem(container: android.view.ViewGroup, position: number): java.lang.Object {
-            const fragmentManager = this.owner._getFragmentManager();
+            const manager = this.owner._getFragmentManager();
             if (!this.mCurTransaction) {
-                this.mCurTransaction = fragmentManager.beginTransaction();
+                this.mCurTransaction = manager.beginTransaction();
             }
 
             const itemId = this.getItemId(position);
             const name = makeFragmentName(container.getId(), itemId);
 
-            let fragment: android.support.v4.app.Fragment = fragmentManager.findFragmentByTag(name);
-            if (fragment != null) {
+            let fragment: android.support.v4.app.Fragment = manager.findFragmentByTag(name);
+            if (fragment != null && this.mCurTransaction) {
                 this.mCurTransaction.attach(fragment);
             } else {
                 fragment = TabFragmentImplementation.newInstance(this.owner._domId, position);
-                this.mCurTransaction.add(container.getId(), fragment, name);
+                if (fragment != null && this.mCurTransaction) {
+                  this.mCurTransaction.add(container.getId(), fragment, name);
+                }
             }
 
-            if (fragment !== this.mCurrentPrimaryItem) {
+            if (fragment != null && fragment !== this.mCurrentPrimaryItem) {
                 fragment.setMenuVisibility(false);
                 fragment.setUserVisibleHint(false);
             }
@@ -581,6 +583,25 @@ export class TabView extends TabViewBase {
 
     public updateAndroidItemAt(index: number, spec: org.nativescript.widgets.TabItemSpec) {
         this._tabLayout.updateItemAt(index, spec);
+    }
+
+    public setTabTitleOffset(offset: number) {
+      (<any>this._tabLayout).setTabTitleOffset(offset);
+    }
+
+    public setTabItemPadding(padding: number) {
+      (<any>this._tabLayout).setTabItemPadding(padding);
+    }
+
+    public setTabItemTextSize(size: number) {
+      (<any>this._tabLayout).setTabItemTextSize(size);
+    }
+
+    [androidMeasureBasedOnLargestProperty.getDefault](): boolean {
+      return (<any>this._tabLayout).getMeasureBasedOnLargest();
+    }
+    [androidMeasureBasedOnLargestProperty.setNative](value: boolean) {
+      (<any>this._tabLayout).setMeasureBasedOnLargest(value);
     }
 
     [androidOffscreenTabLimitProperty.getDefault](): number {

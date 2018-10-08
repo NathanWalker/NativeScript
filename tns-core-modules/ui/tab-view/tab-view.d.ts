@@ -150,4 +150,5 @@ export const tabBackgroundColorProperty: CssProperty<Style, Color>;
 export const selectedTabTextColorProperty: CssProperty<Style, Color>;
 export const androidSelectedTabHighlightColorProperty: CssProperty<Style, Color>;
 export const androidOffscreenTabLimitProperty: Property<TabView, number>;
+export const androidMeasureBasedOnLargestProperty: Property<TabView, boolean>;
 export const iosIconRenderingModeProperty: Property<TabView, "automatic" | "alwaysOriginal" | "alwaysTemplate">;
