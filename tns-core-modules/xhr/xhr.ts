@@ -5,6 +5,7 @@ module XMLHttpRequestResponseType {
     export var empty = "";
     export var text = "text";
     export var json = "json";
+    export var blob = "blob";
 }
 
 export class XMLHttpRequest {
