@@ -45,7 +45,11 @@ export class Cache extends common.Cache {
             onComplete: function (result: any, context: any) {
                 var instance = that.get();
                 if (instance) {
-                    instance._onDownloadCompleted(context, result)
+                  if (result != null) {
+                    instance._onDownloadCompleted(context, result);
+                  } else {
+                    instance._onDownloadError(result);
+                  }
                 }
             }
         });
@@ -61,7 +65,9 @@ export class Cache extends common.Cache {
     }
 
     public set(key: string, image: any): void {
+      if (image != null) {
         this._cache.put(key, image);
+      }
     }
 
     public remove(key: string): void {

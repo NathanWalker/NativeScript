@@ -177,10 +177,6 @@ export class TabViewItem extends TabViewItemBase {
 
     public setViewController(controller: UIViewController, nativeView: UIView) {
         this.__controller = controller;
-        // prevent white flash when loading tabs for first time
-        console.log('TabViewItem setting backgroundColor = UIColor.clearColor');
-        nativeView.opaque = false;
-        nativeView.backgroundColor = UIColor.clearColor;
         this.setNativeView(nativeView);
     }
 

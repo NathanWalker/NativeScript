@@ -588,7 +588,7 @@ class iOSFrame implements iOSFrameDefinition {
     }
     public set showNavigationBar(value: boolean) {
         this._showNavigationBar = value;
-        this._controller.setNavigationBarHiddenAnimated(!value, true);
+        this._controller.setNavigationBarHiddenAnimated(!value, false);
     }
 
     public get navBarVisibility(): "auto" | "never" | "always" {

@@ -88,6 +88,11 @@ export class Cache extends common.Cache {
             .then(response => {
                 var image = UIImage.alloc().initWithData(response.content.raw);
                 that._onDownloadCompleted(request.key, image);
+            }, err => {
+              that._onDownloadError(request.key);
+              if (trace.isEnabled()) {
+                trace.write("request error: " + err, trace.categories.Debug);
+              }
             });
     }
 

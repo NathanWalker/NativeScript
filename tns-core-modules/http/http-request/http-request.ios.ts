@@ -68,7 +68,10 @@ function ensureImageSource() {
 
 export function request(options: http.HttpRequestOptions): Promise<http.HttpResponse> {
     return new Promise<http.HttpResponse>((resolve, reject) => {
-
+      if (!options.url) {
+        reject('unsupported url.');
+        return;
+      }
         try {
             var network = domainDebugger.getNetwork();
             var debugRequest = network && network.create();
