@@ -31,9 +31,19 @@ export function getJSON<T>(arg: any): Promise<T> {
 }
 
 export function getImage(arg: any): Promise<ImageSource> {
-    return httpRequest
+  return new Promise<any>((resolve, reject) => {
+    httpRequest
         .request(typeof arg === "string" ? { url: arg, method: "GET" } : arg)
-        .then(response => response.content.toImage());
+        .then(response => {
+          try {
+            resolve(response.content.toImage());
+          } catch (e) {
+            reject(e);
+          }
+        }, e => {
+          reject(e)
+        });
+  });
 }
 
 export function getFile(arg: any, destinationFilePath?: string): Promise<any> {

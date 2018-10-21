@@ -577,6 +577,8 @@ class iOSFrame implements iOSFrameDefinition {
 
     constructor(frame: Frame) {
         this._controller = UINavigationControllerImpl.initWithOwner(new WeakRef(frame));
+        // hide for all of PNP (prevents actionbar issues)
+        this._controller.setNavigationBarHiddenAnimated(true, false);
     }
 
     public get controller() {
@@ -588,7 +590,8 @@ class iOSFrame implements iOSFrameDefinition {
     }
     public set showNavigationBar(value: boolean) {
         this._showNavigationBar = value;
-        this._controller.setNavigationBarHiddenAnimated(!value, true);
+        // ignore for PNP (not used):
+        // this._controller.setNavigationBarHiddenAnimated(!value, false);
     }
 
     public get navBarVisibility(): "auto" | "never" | "always" {

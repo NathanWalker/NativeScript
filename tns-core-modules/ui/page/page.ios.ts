@@ -234,7 +234,8 @@ export class Page extends PageBase {
         super();
         const controller = UIViewControllerImpl.initWithOwner(new WeakRef(this));
         this.viewController = this._ios = controller;
-        controller.view.backgroundColor = whiteColor;
+        // controller.view.backgroundColor = whiteColor;
+        controller.view.backgroundColor = new Color("#00000000").ios;
     }
 
     createNativeView() {
