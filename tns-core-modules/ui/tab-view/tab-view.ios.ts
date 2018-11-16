@@ -25,6 +25,10 @@ class UITabBarControllerImpl extends UITabBarController {
     public static initWithOwner(owner: WeakRef<TabView>): UITabBarControllerImpl {
         let handler = <UITabBarControllerImpl>UITabBarControllerImpl.new();
         handler._owner = owner;
+        let isNotch = true;
+        let offset = isNotch ? 44 : 0;
+
+        handler.view.frame = CGRectMake(0, offset, handler.view.bounds.size.width, handler.view.bounds.size.height + offset);
         return handler;
     }
 
@@ -41,6 +45,29 @@ class UITabBarControllerImpl extends UITabBarController {
         if (!owner.parent) {
             owner.callLoaded();
         }
+    }
+
+    @profile
+    public viewWillLayoutSubviews(): void {
+        super.viewWillLayoutSubviews();
+        const owner = this._owner.get();
+        if (!owner) {
+            return;
+        }
+
+        let isNotch = true;
+
+        let offset = 0; // 15 default
+        let height = 0;//60;
+        if (isNotch) {
+          offset = 44;
+          height = 84;
+        }
+        // console.log('isNotch:', isNotch)
+        // console.log('viewWillLayoutSubviews!!');
+        // height = owner.ios.tabBar.bounds.size.height;
+        // console.log('owner.ios.tabBar.bounds.size.height:', owner.ios.tabBar.bounds.size.height);
+        owner.ios.tabBar.frame = CGRectMake(0,-offset,owner.ios.view.bounds.size.width, height);
     }
 
     @profile
@@ -165,7 +192,9 @@ function updateTitleAndIconPositions(tabItem: TabViewItem, tabBarItem: UITabBarI
 
     if (!tabItem.title) {
         if (isIconAboveTitle) {
-            tabBarItem.imageInsets = new UIEdgeInsets({ top: 6, left: 0, bottom: -6, right: 0 });
+            // for top tabbar with just icons to be centered
+            tabBarItem.imageInsets = new UIEdgeInsets({ top: 20, left: 0, bottom: -20, right: 0 });
+            // tabBarItem.imageInsets = new UIEdgeInsets({ top: 6, left: 0, bottom: -6, right: 0 });
         } else {
             tabBarItem.imageInsets = new UIEdgeInsets({ top: 0, left: 0, bottom: 0, right: 0 });
         }
