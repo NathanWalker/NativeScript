@@ -44,6 +44,25 @@ class UITabBarControllerImpl extends UITabBarController {
     }
 
     @profile
+    public viewDidLoad(): void {
+        super.viewDidLoad();
+        const owner = this._owner.get();
+        if (!owner) {
+            return;
+        }
+
+        /**
+         * GRADIENT TABBAR
+         */
+        // const layerGradient = CAGradientLayer.new();
+        // layerGradient.colors = NSArray.arrayWithArray( [new Color('#fff').ios.CGColor, new Color('#FCBB54').ios.CGColor]);
+        // layerGradient.startPoint = CGPointMake(0, 0);
+        // layerGradient.endPoint = CGPointMake(0, 1);
+        // layerGradient.frame = CGRectMake(0, 0, this.tabBar.bounds.size.width, this.tabBar.bounds.size.height + 44);
+        // this.tabBar.layer.addSublayer(layerGradient);
+    }
+
+    @profile
     public viewDidDisappear(animated: boolean): void {
         super.viewDidDisappear(animated);
         const owner = this._owner.get();
@@ -85,6 +104,17 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
             // "< More" cannot be visible after clicking on the main tab bar buttons.
             let backToMoreWillBeVisible = false;
             owner._handleTwoNavigationBars(backToMoreWillBeVisible);
+        }
+
+        /**
+         * CROSS DISSOLVE TRANSITION
+         */
+        const fromView = owner.ios.viewControllers.objectAtIndex(owner.selectedIndex).view;
+        const toView = viewController.view;
+        if (fromView !== toView) {
+          UIView.transitionFromViewToViewDurationOptionsCompletion(fromView, toView, .3, UIViewAnimationOptions.TransitionCrossDissolve, (finished: boolean) => {
+            // ignore
+          });
         }
 
         (<any>tabBarController)._willSelectViewController = viewController;
