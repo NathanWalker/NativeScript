@@ -17,6 +17,32 @@ export * from "./tab-view-common";
 
 const majorVersion = iosUtils.MajorVersion;
 const isPhone = device.deviceType === "Phone";
+let isIPhoneX;
+declare var uname;
+
+const checkIsIPhoneX = function() {
+  if (typeof isIPhoneX === "undefined") {
+    const _SYS_NAMELEN: number = 256;
+
+    const buffer: any = interop.alloc(5 * _SYS_NAMELEN);
+    uname(buffer);
+    let name: string = NSString.stringWithUTF8String(buffer.add(_SYS_NAMELEN * 4)).toString();
+
+    // Get machine name for Simulator
+    if (name === "x86_64" || name === "i386") {
+      name = NSProcessInfo.processInfo.environment.objectForKey("SIMULATOR_MODEL_IDENTIFIER");
+    }
+
+    // console.log("isIPhoneX name:', name);
+    isIPhoneX =
+        name.indexOf("iPhone10,3") === 0 ||
+        name.indexOf("iPhone10,6") === 0 ||
+        name.indexOf("iPhone11,8") === 0 ||
+        name.indexOf("iPhone11,6") === 0 || // XS Max (china variant)
+        name.indexOf("iPhone11,4") === 0 || // XS Max (us variant)
+        name.indexOf("iPhone11,2") === 0;
+  }
+};
 
 class UITabBarControllerImpl extends UITabBarController {
 
@@ -24,6 +50,12 @@ class UITabBarControllerImpl extends UITabBarController {
 
     public static initWithOwner(owner: WeakRef<TabView>): UITabBarControllerImpl {
         let handler = <UITabBarControllerImpl>UITabBarControllerImpl.new();
+        if (isIPhoneX) {
+          const offset = 44;
+          handler.view.frame = CGRectMake(0, offset, handler.view.bounds.size.width, handler.view.bounds.size.height + offset);
+        } else {
+          handler.view.frame = CGRectMake(0, 25, handler.view.bounds.size.width, handler.view.bounds.size.height + 25);
+        }
         handler._owner = owner;
         return handler;
     }
@@ -43,6 +75,23 @@ class UITabBarControllerImpl extends UITabBarController {
         }
     }
 
+    @profile
+    public viewWillLayoutSubviews(): void {
+        super.viewWillLayoutSubviews();
+        const owner = this._owner.get();
+        if (!owner) {
+            return;
+        }
+        if (isIPhoneX) {
+          const offset = 44;
+          const height = 84;
+          owner.ios.tabBar.frame = CGRectMake(0, -offset, owner.ios.view.bounds.size.width, height);
+        } else {
+          // console.log('tabbar height:', owner.ios.tabBar.bounds.size.height);
+          owner.ios.tabBar.frame = CGRectMake(0, -25, owner.ios.view.bounds.size.width, owner.ios.tabBar.bounds.size.height + 20);
+        }
+    }
+
     // @profile
     // public viewDidLoad(): void {
     //     super.viewDidLoad();
@@ -55,7 +104,7 @@ class UITabBarControllerImpl extends UITabBarController {
     //      * GRADIENT TABBAR
     //      */
     //     const layerGradient = CAGradientLayer.new();
-    //     layerGradient.colors = NSArray.arrayWithArray( [new Color('#fff').ios.CGColor, new Color('#FCBB54').ios.CGColor]);
+    //     layerGradient.colors = NSArray.arrayWithArray( [new Color("#fff").ios.CGColor, new Color("#FCBB54").ios.CGColor]);
     //     layerGradient.startPoint = CGPointMake(0, 0);
     //     layerGradient.endPoint = CGPointMake(0, 1);
     //     layerGradient.frame = CGRectMake(0, 0, this.tabBar.bounds.size.width, this.tabBar.bounds.size.height + 44);
@@ -195,7 +244,11 @@ function updateTitleAndIconPositions(tabItem: TabViewItem, tabBarItem: UITabBarI
 
     if (!tabItem.title) {
         if (isIconAboveTitle) {
-            tabBarItem.imageInsets = new UIEdgeInsets({ top: 6, left: 0, bottom: -6, right: 0 });
+          if (isIPhoneX) {
+            tabBarItem.imageInsets = new UIEdgeInsets({ top: 20, left: 0, bottom: -20, right: 0 });
+          } else {
+            tabBarItem.imageInsets = new UIEdgeInsets({ top: 12, left: 0, bottom: -12, right: 0 });
+          }
         } else {
             tabBarItem.imageInsets = new UIEdgeInsets({ top: 0, left: 0, bottom: 0, right: 0 });
         }
@@ -267,7 +320,7 @@ export class TabView extends TabViewBase {
 
     constructor() {
         super();
-
+        checkIsIPhoneX();
         this.viewController = this._ios = UITabBarControllerImpl.initWithOwner(new WeakRef(this));
         this.nativeViewProtected = this._ios.view;
     }
