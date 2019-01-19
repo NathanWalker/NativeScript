@@ -52,7 +52,7 @@ class UITabBarControllerImpl extends UITabBarController {
         let handler = <UITabBarControllerImpl>UITabBarControllerImpl.new();
         if (isIPhoneX) {
           const offset = 44;
-          handler.view.frame = CGRectMake(0, offset, handler.view.bounds.size.width, handler.view.bounds.size.height + offset);
+          handler.view.frame = CGRectMake(0, offset, handler.view.bounds.size.width, handler.view.bounds.size.height);
         } else {
           handler.view.frame = CGRectMake(0, 25, handler.view.bounds.size.width, handler.view.bounds.size.height + 25);
         }
@@ -144,7 +144,6 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
     }
 
     public tabBarControllerShouldSelectViewController(tabBarController: UITabBarController, viewController: UIViewController): boolean {
-      console.log("tabBarControllerShouldSelectViewController!");
       
         if (traceEnabled()) {
             traceWrite("TabView.delegate.SHOULD_select(" + tabBarController + ", " + viewController + ");", traceCategories.Debug);
@@ -156,7 +155,6 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
             let backToMoreWillBeVisible = false;
             owner._handleTwoNavigationBars(backToMoreWillBeVisible);
         }
-        console.log("owner.selectedIndex:", owner.selectedIndex);
 
         /**
          * CROSS DISSOLVE TRANSITION
@@ -166,8 +164,6 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
         if (fromView !== toView) {
           UIView.transitionFromViewToViewDurationOptionsCompletion(fromView, toView, .3, UIViewAnimationOptions.TransitionCrossDissolve, (finished: boolean) => {
             // ignore
-            console.log("cross dissolve done!");
-            console.log("selectedIndex:", owner.selectedIndex);
           });
         }
 
@@ -177,7 +173,6 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
     }
 
     public tabBarControllerDidSelectViewController(tabBarController: UITabBarController, viewController: UIViewController): void {
-      console.log("tabBarControllerDidSelectViewController!");
         if (traceEnabled()) {
             traceWrite("TabView.delegate.DID_select(" + tabBarController + ", " + viewController + ");", traceCategories.Debug);
         }
@@ -188,14 +183,7 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
         }
 
         (<any>tabBarController)._willSelectViewController = undefined;
-        console.log("owner.selectedIndex:", owner.selectedIndex);
-        console.log("owner.ios.tabBar.subviews.count:", owner.ios.tabBar.subviews.count);
-        
-        console.log("owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex):", owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex));
-        console.log("owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex + 1):", owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex + 1));
-
         const subView = owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex + 1).subviews.firstObject;
-        console.log("subView:", subView);
 
         UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
           .5,
@@ -332,6 +320,7 @@ export class TabViewItem extends TabViewItemBase {
             const tabBarItem = UITabBarItem.alloc().initWithTitleImageTag(title, icon, index);
             updateTitleAndIconPositions(this, tabBarItem, controller);
 
+            // const subView = parent.ios.tabBar.subviews.objectAtIndex(index).subviews.firstObject;
             // TODO: Repeating code. Make TabViewItemBase - ViewBase and move the colorProperty on tabViewItem.
             // Delete the repeating code.
             const states = getTitleAttributesForStates(parent);
