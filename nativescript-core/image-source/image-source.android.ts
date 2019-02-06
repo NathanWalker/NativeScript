@@ -348,6 +348,24 @@ function getTargetFormat(format: "png" | "jpeg" | "jpg"): android.graphics.Bitma
     }
 }
 
+// private setRotationAngleFromFile(filename: string) {
+//   this.rotationAngle = 0;
+//   const ei = new android.support.media.ExifInterface(filename);
+//   const orientation = ei.getAttributeInt(android.support.media.ExifInterface.TAG_ORIENTATION, android.support.media.ExifInterface.ORIENTATION_NORMAL);
+
+//   switch (orientation) {
+//       case android.support.media.ExifInterface.ORIENTATION_ROTATE_90:
+//           this.rotationAngle = 90;
+//           break;
+//       case android.support.media.ExifInterface.ORIENTATION_ROTATE_180:
+//           this.rotationAngle = 180;
+//           break;
+//       case android.support.media.ExifInterface.ORIENTATION_ROTATE_270:
+//           this.rotationAngle = 270;
+//           break;
+//   }
+// }
+
 function getRotationAngleFromFile(filename: string): number {
     let result = 0;
     const ei = new android.media.ExifInterface(filename);
