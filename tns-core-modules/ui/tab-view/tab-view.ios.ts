@@ -184,6 +184,14 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
 
         (<any>tabBarController)._willSelectViewController = undefined;
         const subView = owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex + 1).subviews.firstObject;
+        // console.log('owner.ios.tabBar.subviews.count:', owner.ios.tabBar.subviews.count);
+        for (var i = 0; i < owner.ios.tabBar.subviews.count; i++) {
+          if (i !== owner.selectedIndex && i < 5) { // i < 5 prevent a crash since we only want last item and there are a total of 6 items
+            const item = owner.ios.tabBar.subviews.objectAtIndex(i+1).subviews.firstObject;
+            item.alpha = .8;
+            item.layer.shadowOpacity = 0;
+          }
+        }
 
         UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
           .5,
@@ -192,7 +200,24 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
           .5,
           UIViewAnimationOptions.CurveEaseInOut,
           function() {
-            subView.transform = CGAffineTransformMakeScale(1.4, 1.4);
+
+            const scale = CGAffineTransformMakeScale(1.4, 1.4);
+            subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(.2)); 
+  
+              
+            subView.alpha = 1;
+            subView.layer.masksToBounds = false;
+            if (owner.selectedIndex === 0) {
+              subView.layer.shadowColor = iosUtils.getter(UIColor, UIColor.whiteColor).CGColor;
+              subView.layer.shadowOpacity = 1;
+              subView.layer.shadowRadius = 2;
+            } else {
+              subView.layer.shadowColor = iosUtils.getter(UIColor, UIColor.blackColor).CGColor;
+              subView.layer.shadowOpacity = 0.8;
+              subView.layer.shadowRadius = 1.5;
+            }
+            subView.layer.cornerRadius = 3;//subView.frame.size.height/2;
+            subView.layer.shadowOffset = CGSizeMake(0, 0);
 
             UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
               .5,
@@ -201,7 +226,8 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
               .5,
               UIViewAnimationOptions.CurveEaseInOut,
               function() {
-                subView.transform = CGAffineTransformMakeScale(1, 1);
+                const scale = CGAffineTransformMakeScale(1, 1);
+                subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(0));
               },
               function(completed) {
                 // ignore
