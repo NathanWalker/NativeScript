@@ -46,13 +46,15 @@ const checkIsIPhoneX = function() {
 
 class UITabBarControllerImpl extends UITabBarController {
 
+    private paintedBgForIndex: any;
+    private previousSelectedIndex: number;
     private _owner: WeakRef<TabView>;
 
     public static initWithOwner(owner: WeakRef<TabView>): UITabBarControllerImpl {
         let handler = <UITabBarControllerImpl>UITabBarControllerImpl.new();
         if (isIPhoneX) {
-          const offset = 44;
-          handler.view.frame = CGRectMake(0, offset, handler.view.bounds.size.width, handler.view.bounds.size.height);
+          const offset = 84;
+          handler.view.frame = CGRectMake(0, 0, handler.view.bounds.size.width, handler.view.bounds.size.height + offset);
         } else {
           handler.view.frame = CGRectMake(0, 25, handler.view.bounds.size.width, handler.view.bounds.size.height + 25);
         }
@@ -91,14 +93,75 @@ class UITabBarControllerImpl extends UITabBarController {
         if (!owner) {
             return;
         }
-        if (isIPhoneX) {
-          const offset = 44;
-          const height = 84;
-          owner.ios.tabBar.frame = CGRectMake(0, -offset, owner.ios.view.bounds.size.width, height);
-        } else {
-          // console.log('tabbar height:', owner.ios.tabBar.bounds.size.height);
-          owner.ios.tabBar.frame = CGRectMake(0, -25, owner.ios.view.bounds.size.width, owner.ios.tabBar.bounds.size.height + 20);
+        // avoid repainting gradient extraneously
+        if (!this.paintedBgForIndex) {
+          this.paintedBgForIndex = {};
         }
+        if (!this.paintedBgForIndex[this.selectedIndex]) {
+          // reset all indices
+          for (var i = 0; i < 5; i++) {
+            this.paintedBgForIndex[i] = false;
+          }
+          this.paintedBgForIndex[this.selectedIndex] = true;
+
+          // handle frame positioning
+          if (isIPhoneX) {
+              var offset = 0; //100;//44;
+              var height = owner.ios.tabBar.bounds.size.height; //130;//70;//84;
+              owner.ios.tabBar.frame = CGRectMake(0, offset, owner.ios.view.bounds.size.width, height);
+              // Debug viewController y position underneath with:
+              // owner.ios.tabBar.alpha = .3;
+          }
+          else {
+            // TODO: test regular (non-X) iphones
+              owner.ios.tabBar.frame = CGRectMake(0, -25, owner.ios.view.bounds.size.width, owner.ios.tabBar.bounds.size.height + 20);
+          }
+
+          // TODO: Make a Property setter to allow colors to be set via hex from the view
+          // For now, this is all hard coded colors specific to Sweet app
+          var colors;
+          switch (this.selectedIndex) {
+            case 0:
+              colors = [UIColor.colorWithRedGreenBlueAlpha(1, .51, .46, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1).CGColor];
+              break;
+            case 1:
+              colors = [UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1).CGColor];
+              break;
+            case 2:
+              colors = [UIColor.colorWithRedGreenBlueAlpha(.64, .49, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1).CGColor];
+              break;
+            case 3:
+              colors = [UIColor.colorWithRedGreenBlueAlpha(.45, .57, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1).CGColor];
+              break;
+            case 4:
+              colors = [UIColor.colorWithRedGreenBlueAlpha(.01, .66, .71, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1).CGColor];
+              break;
+          }
+          this.changeBackgroundGradient(owner.ios, colors);
+
+          // can make tabbar fully transparent with this:
+          // owner.ios.tabBar.shadowImage = UIImage.new();
+          // owner.ios.tabBar.backgroundImage = UIImage.new();
+  
+          // important to be able to use flat (full) color (without tinting)
+          owner.ios.tabBar.translucent = false;
+        }
+    }
+
+    public changeBackgroundGradient(target, colors) {
+      if (!target) {
+        return;
+      }
+      // console.log('tabbar changeBackgroundGradient for index:', this.selectedIndex);
+      const layerGradient = CAGradientLayer.layer();
+      layerGradient.colors = NSArray.arrayWithArray(colors);
+      layerGradient.startPoint = CGPointMake(.5, 0);
+      layerGradient.endPoint = CGPointMake(.5, 1);
+      layerGradient.frame = CGRectMake(0, 0, target.view.bounds.size.width, target.tabBar.bounds.size.height);
+      UIGraphicsBeginImageContext(layerGradient.bounds.size);
+      layerGradient.renderInContext(UIGraphicsGetCurrentContext());
+      const resultImage = UIGraphicsGetImageFromCurrentImageContext();
+      target.tabBar.backgroundImage = resultImage;
     }
 
     // @profile
@@ -119,6 +182,97 @@ class UITabBarControllerImpl extends UITabBarController {
     //     layerGradient.frame = CGRectMake(0, 0, this.tabBar.bounds.size.width, this.tabBar.bounds.size.height + 44);
     //     this.tabBar.layer.addSublayer(layerGradient);
     // }
+
+    public tabBarDidSelectItem(tabBar, item) {
+      if (item) {
+        var owner = this._owner.get();
+        if (!owner) {
+            return;
+        }
+        // console.log('item tag (this is same as this.selectedIndex):', item.tag);
+
+        // IMPORTANT NOTE:
+        // https://stackoverflow.com/a/51542606/2192332
+        // Keep in mind that the order of the subviews in the UITabBar may be unordered so accessing the correct item from it using an index may not work correctly.
+        // Therefore sort by interactive controls and then sort by position
+        const orderedTabItemViews = [];
+        for (var i = 0; i < owner.ios.tabBar.subviews.count; i++) {
+          var view = owner.ios.tabBar.subviews.objectAtIndex(i);
+          if (view.userInteractionEnabled) {
+            // reset shadow
+            // view.subviews.firstObject.layer.shadowOpacity = 0;
+            orderedTabItemViews.push(view);
+          }
+        }
+        orderedTabItemViews.sort((a, b) => a.frame.origin.x - b.frame.origin.x);
+        // console.log('orderedTabItemViews:', orderedTabItemViews.map(item => item.frame.origin.x));
+
+        const selectedItem = orderedTabItemViews[item.tag].subviews.firstObject;
+        // console.log('selectedItem:', selectedItem);
+        let previousSelectedItem;
+        if (typeof this.previousSelectedIndex === "undefined") {
+          // since app starts with selectedIndex 2, set explicitly to start
+          this.previousSelectedIndex = 2;
+        } else {
+          previousSelectedItem = orderedTabItemViews[this.previousSelectedIndex].subviews.firstObject;
+          // reset previousSelected for next time
+          this.previousSelectedIndex = item.tag;
+        }
+
+
+        UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
+          .5,
+          0,
+          .5,
+          .5,
+          UIViewAnimationOptions.CurveEaseInOut,
+          function () {
+          const scale = CGAffineTransformMakeScale(1.2, 1.2);
+          // selectedItem.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(.2)); 
+          selectedItem.transform = scale;
+
+          if (previousSelectedItem) {
+            // deselection animation
+            previousSelectedItem.transform = CGAffineTransformMakeScale(.9, .9);
+          }
+          // selectedItem.alpha = 1;
+
+          // shadow effect
+          // selectedItem.layer.masksToBounds = false;
+
+          // selectedItem.layer.shadowColor = utils_1.ios.getter(UIColor, UIColor.whiteColor).CGColor;
+          // selectedItem.layer.shadowOpacity = 1;
+          // selectedItem.layer.shadowRadius = 2;
+
+          // // selectedItem.layer.shadowColor = utils_1.ios.getter(UIColor, UIColor.blackColor).CGColor;
+          // // selectedItem.layer.shadowOpacity = 0.8;
+          // // selectedItem.layer.shadowRadius = 1.5;
+            
+          // selectedItem.layer.cornerRadius = selectedItem.frame.size.height/2;
+          // selectedItem.layer.shadowOffset = CGSizeMake(0, 0);
+
+            UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
+              .5,
+              .2,
+              .5,
+              .5,
+              UIViewAnimationOptions.CurveEaseInOut,
+               function () {
+                const scale = CGAffineTransformMakeScale(1, 1);
+                // selectedItem.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(0));
+                selectedItem.transform = scale;
+                if (previousSelectedItem) {
+                  // deselection animation
+                  previousSelectedItem.transform = scale;
+                }
+            }, function (completed) {
+              // ignore
+            });
+        }, function (completed) {
+          // ignore
+        });
+      }
+    }
 
     @profile
     public viewDidDisappear(animated: boolean): void {
@@ -176,9 +330,30 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
         const fromView = owner.ios.viewControllers.objectAtIndex(owner.selectedIndex).view;
         const toView = viewController.view;
         if (fromView !== toView) {
-          UIView.transitionFromViewToViewDurationOptionsCompletion(fromView, toView, .3, UIViewAnimationOptions.TransitionCrossDissolve, (finished: boolean) => {
-            // ignore
-          });
+          let backgroundColor;
+          switch (owner.selectedIndex) {
+            case 0:
+              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1);
+              break;
+            case 1:
+              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
+              break;
+            case 2:
+              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1);
+              break;
+            case 3:
+              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1);
+              break;
+            case 4:
+              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1);
+              break;
+          }
+          fromView.backgroundColor = backgroundColor;
+          toView.backgroundColor = backgroundColor;
+
+          // UIView.transitionFromViewToViewDurationOptionsCompletion(fromView, toView, .3, UIViewAnimationOptions.TransitionCrossDissolve, (finished: boolean) => {
+          //   // ignore
+          // });
         }
 
         (<any>tabBarController)._willSelectViewController = viewController;
@@ -195,63 +370,64 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
         if (owner) {
             owner._onViewControllerShown(viewController);
         }
-
         (<any>tabBarController)._willSelectViewController = undefined;
-        const subView = owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex + 1).subviews.firstObject;
-        // console.log('owner.ios.tabBar.subviews.count:', owner.ios.tabBar.subviews.count);
-        for (var i = 0; i < owner.ios.tabBar.subviews.count; i++) {
-          if (i !== owner.selectedIndex && i < 5) { // i < 5 prevent a crash since we only want last item and there are a total of 6 items
-            const item = owner.ios.tabBar.subviews.objectAtIndex(i+1).subviews.firstObject;
-            item.alpha = .8;
-            item.layer.shadowOpacity = 0;
-          }
-        }
 
-        UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
-          .5,
-          0,
-          .5,
-          .5,
-          UIViewAnimationOptions.CurveEaseInOut,
-          function() {
+        // experiment at one time:
+        // const subView = owner.ios.tabBar.subviews.objectAtIndex(owner.selectedIndex + 1).subviews.firstObject;
+        // // console.log('owner.ios.tabBar.subviews.count:', owner.ios.tabBar.subviews.count);
+        // for (var i = 0; i < owner.ios.tabBar.subviews.count; i++) {
+        //   if (i !== owner.selectedIndex && i < 5) { // i < 5 prevent a crash since we only want last item and there are a total of 6 items
+        //     const item = owner.ios.tabBar.subviews.objectAtIndex(i+1).subviews.firstObject;
+        //     item.alpha = .8;
+        //     item.layer.shadowOpacity = 0;
+        //   }
+        // }
 
-            const scale = CGAffineTransformMakeScale(1.4, 1.4);
-            subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(.2)); 
+        // UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
+        //   .5,
+        //   0,
+        //   .5,
+        //   .5,
+        //   UIViewAnimationOptions.CurveEaseInOut,
+        //   function() {
+
+        //     const scale = CGAffineTransformMakeScale(1.4, 1.4);
+        //     subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(.2)); 
   
               
-            subView.alpha = 1;
-            subView.layer.masksToBounds = false;
-            if (owner.selectedIndex === 0) {
-              subView.layer.shadowColor = iosUtils.getter(UIColor, UIColor.whiteColor).CGColor;
-              subView.layer.shadowOpacity = 1;
-              subView.layer.shadowRadius = 2;
-            } else {
-              subView.layer.shadowColor = iosUtils.getter(UIColor, UIColor.blackColor).CGColor;
-              subView.layer.shadowOpacity = 0.8;
-              subView.layer.shadowRadius = 1.5;
-            }
-            subView.layer.cornerRadius = 3;//subView.frame.size.height/2;
-            subView.layer.shadowOffset = CGSizeMake(0, 0);
+        //     subView.alpha = 1;
+        //     subView.layer.masksToBounds = false;
+        //     if (owner.selectedIndex === 0) {
+        //       subView.layer.shadowColor = iosUtils.getter(UIColor, UIColor.whiteColor).CGColor;
+        //       subView.layer.shadowOpacity = 1;
+        //       subView.layer.shadowRadius = 2;
+        //     } else {
+        //       subView.layer.shadowColor = iosUtils.getter(UIColor, UIColor.blackColor).CGColor;
+        //       subView.layer.shadowOpacity = 0.8;
+        //       subView.layer.shadowRadius = 1.5;
+        //     }
+        //     subView.layer.cornerRadius = 3;//subView.frame.size.height/2;
+        //     subView.layer.shadowOffset = CGSizeMake(0, 0);
 
-            UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
-              .5,
-              .2,
-              .5,
-              .5,
-              UIViewAnimationOptions.CurveEaseInOut,
-              function() {
-                const scale = CGAffineTransformMakeScale(1, 1);
-                subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(0));
-              },
-              function(completed) {
-                // ignore
-              }
-            );
-          },
-          function(completed) {
-            // ignore
-          }
-        );
+        //     UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
+        //       .5,
+        //       .2,
+        //       .5,
+        //       .5,
+        //       UIViewAnimationOptions.CurveEaseInOut,
+        //       function() {
+        //         const scale = CGAffineTransformMakeScale(1, 1);
+        //         subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(0));
+        //       },
+        //       function(completed) {
+        //         // ignore
+        //       }
+        //     );
+        //   },
+        //   function(completed) {
+        //     // ignore
+        //   }
+        // );
     }
 }
 
@@ -316,7 +492,8 @@ function updateTitleAndIconPositions(tabItem: TabViewItem, tabBarItem: UITabBarI
     if (!tabItem.title) {
         if (isIconAboveTitle) {
           if (isIPhoneX) {
-            tabBarItem.imageInsets = new UIEdgeInsets({ top: 20, left: 0, bottom: -20, right: 0 });
+            // tabBarItem.imageInsets = new UIEdgeInsets({ top: 20, left: 0, bottom: -20, right: 0 });
+            tabBarItem.imageInsets = new UIEdgeInsets({ top: 6, left: 0, bottom: -6, right: 0 });
           } else {
             tabBarItem.imageInsets = new UIEdgeInsets({ top: 12, left: 0, bottom: -12, right: 0 });
           }
@@ -359,6 +536,8 @@ export class TabViewItem extends TabViewItemBase {
             const title = getTransformedText(this.title, this.style.textTransform);
 
             const tabBarItem = UITabBarItem.alloc().initWithTitleImageTag(title, icon, index);
+            // THIS LINE IS MAGIC (AVOIDS creating new tabbaritems each time you change selected image!!)
+            tabBarItem.selectedImage = parent._getIcon(this.iconSource + "_selected");
             updateTitleAndIconPositions(this, tabBarItem, controller);
 
             // const subView = parent.ios.tabBar.subviews.objectAtIndex(index).subviews.firstObject;
@@ -663,12 +842,13 @@ export class TabView extends TabViewBase {
         this._updateIOSTabBarColorsAndFonts();
     }
 
-    [tabBackgroundColorProperty.getDefault](): UIColor {
-        return this._ios.tabBar.barTintColor;
-    }
-    [tabBackgroundColorProperty.setNative](value: UIColor | Color) {
-        this._ios.tabBar.barTintColor = value instanceof Color ? value.ios : value;
-    }
+    // NOTE: disabling barTintColor access completely since using custom gradient backgroundImage
+    // [tabBackgroundColorProperty.getDefault](): UIColor {
+    //     return this._ios.tabBar.barTintColor;
+    // }
+    // [tabBackgroundColorProperty.setNative](value: UIColor | Color) {
+    //     this._ios.tabBar.barTintColor = value instanceof Color ? value.ios : value;
+    // }
 
     [selectedTabTextColorProperty.getDefault](): UIColor {
         return this._ios.tabBar.tintColor;
