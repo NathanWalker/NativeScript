@@ -19,6 +19,9 @@ const majorVersion = iosUtils.MajorVersion;
 const isPhone = device.deviceType === "Phone";
 let isIPhoneX;
 declare var uname;
+var contentViewHeight;
+var contentViewOffsetHeight;
+var topFrameOffset;
 
 const checkIsIPhoneX = function() {
   if (typeof isIPhoneX === "undefined") {
@@ -52,11 +55,17 @@ class UITabBarControllerImpl extends UITabBarController {
 
     public static initWithOwner(owner: WeakRef<TabView>): UITabBarControllerImpl {
         let handler = <UITabBarControllerImpl>UITabBarControllerImpl.new();
+        contentViewHeight = handler.view.bounds.size.height;
+        // If this is changed to literally 88 it will show bumper at bottom
+        // (1 point under 88 will allow it to bleed/overflow properly)
+        contentViewOffsetHeight = 87;
         if (isIPhoneX) {
-          const offset = 84;
-          handler.view.frame = CGRectMake(0, 0, handler.view.bounds.size.width, handler.view.bounds.size.height + offset);
+          topFrameOffset = 88;
+            handler.view.frame = CGRectMake(0, topFrameOffset, handler.view.bounds.size.width, contentViewHeight - contentViewOffsetHeight);
         } else {
-          handler.view.frame = CGRectMake(0, 25, handler.view.bounds.size.width, handler.view.bounds.size.height + 25);
+          topFrameOffset = 64;
+          contentViewOffsetHeight = 63;
+          handler.view.frame = CGRectMake(0, topFrameOffset, handler.view.bounds.size.width, contentViewHeight - contentViewOffsetHeight);
         }
         handler._owner = owner;
 
@@ -79,6 +88,9 @@ class UITabBarControllerImpl extends UITabBarController {
             return;
         }
 
+        // Unify translucent and opaque bars layout
+        // this.extendedLayoutIncludesOpaqueBars = true;
+
         iosView.updateAutoAdjustScrollInsets(this, owner);
 
         if (!owner.parent) {
@@ -93,9 +105,25 @@ class UITabBarControllerImpl extends UITabBarController {
         if (!owner) {
             return;
         }
+        let offset = 0;
+        let tabBarHeight = 0;
+        let didAdjust = false;
         // avoid repainting gradient extraneously
         if (!this.paintedBgForIndex) {
           this.paintedBgForIndex = {};
+        }
+        if (owner.ios.tabBar.frame.origin.y > 0) {
+          // handle case where a modal or some other view opens which upon closing resets UITabBar
+          // re-layout the UITabBar in this case
+          this.paintedBgForIndex[this.selectedIndex] = false;
+          didAdjust = true;
+          tabBarHeight = 83;
+
+          if (isIPhoneX) {
+            this.view.frame = CGRectMake(0, topFrameOffset, this.view.bounds.size.width, contentViewHeight - contentViewOffsetHeight);
+          } else {
+            this.view.frame = CGRectMake(0, topFrameOffset, this.view.bounds.size.width, contentViewHeight - contentViewOffsetHeight);
+          }
         }
         if (!this.paintedBgForIndex[this.selectedIndex]) {
           // reset all indices
@@ -106,36 +134,35 @@ class UITabBarControllerImpl extends UITabBarController {
 
           // handle frame positioning
           if (isIPhoneX) {
-              var offset = 0; //100;//44;
-              var height = owner.ios.tabBar.bounds.size.height; //130;//70;//84;
+              const height = tabBarHeight || owner.ios.tabBar.bounds.size.height;
               owner.ios.tabBar.frame = CGRectMake(0, offset, owner.ios.view.bounds.size.width, height);
               // Debug viewController y position underneath with:
               // owner.ios.tabBar.alpha = .3;
           }
           else {
-            // TODO: test regular (non-X) iphones
-              owner.ios.tabBar.frame = CGRectMake(0, -25, owner.ios.view.bounds.size.width, owner.ios.tabBar.bounds.size.height + 20);
+              const height = tabBarHeight || owner.ios.tabBar.bounds.size.height;
+              owner.ios.tabBar.frame = CGRectMake(0, 0, owner.ios.view.bounds.size.width, height);
           }
 
           // TODO: Make a Property setter to allow colors to be set via hex from the view
           // For now, this is all hard coded colors specific to Sweet app
-          var colors;
+          let colors;
           switch (this.selectedIndex) {
             case 0:
-              colors = [UIColor.colorWithRedGreenBlueAlpha(1, .51, .46, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1).CGColor];
-              break;
+                colors = [UIColor.colorWithRedGreenBlueAlpha(.64, .49, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1).CGColor];
+                break;
             case 1:
-              colors = [UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1).CGColor];
-              break;
+                colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .84, .99, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor];
+                break;
             case 2:
-              colors = [UIColor.colorWithRedGreenBlueAlpha(.64, .49, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1).CGColor];
-              break;
+                colors = [UIColor.colorWithRedGreenBlueAlpha(1, .51, .46, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1).CGColor];
+                break;
             case 3:
-              colors = [UIColor.colorWithRedGreenBlueAlpha(.45, .57, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1).CGColor];
-              break;
+                colors = [UIColor.colorWithRedGreenBlueAlpha(.45, .57, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1).CGColor];
+                break;
             case 4:
-              colors = [UIColor.colorWithRedGreenBlueAlpha(.01, .66, .71, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1).CGColor];
-              break;
+                colors = [UIColor.colorWithRedGreenBlueAlpha(.01, .66, .71, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1).CGColor];
+                break;
           }
           this.changeBackgroundGradient(owner.ios, colors);
 
@@ -211,8 +238,8 @@ class UITabBarControllerImpl extends UITabBarController {
         // console.log('selectedItem:', selectedItem);
         let previousSelectedItem;
         if (typeof this.previousSelectedIndex === "undefined") {
-          // since app starts with selectedIndex 2, set explicitly to start
-          this.previousSelectedIndex = 2;
+          // since app starts with selectedIndex 0, set explicitly to start (can use to start at different index as well)
+          this.previousSelectedIndex = 0;
         } else {
           previousSelectedItem = orderedTabItemViews[this.previousSelectedIndex].subviews.firstObject;
           // reset previousSelected for next time
@@ -333,20 +360,20 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
           let backgroundColor;
           switch (owner.selectedIndex) {
             case 0:
-              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1);
-              break;
+                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1);
+                break;
             case 1:
-              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
-              break;
+                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
+                break;
             case 2:
-              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1);
-              break;
+                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1);
+                break;
             case 3:
-              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1);
-              break;
+                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1);
+                break;
             case 4:
-              backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1);
-              break;
+                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1);
+                break;
           }
           fromView.backgroundColor = backgroundColor;
           toView.backgroundColor = backgroundColor;
