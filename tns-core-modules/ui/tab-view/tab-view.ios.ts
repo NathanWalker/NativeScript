@@ -19,9 +19,9 @@ const majorVersion = iosUtils.MajorVersion;
 const isPhone = device.deviceType === "Phone";
 let isIPhoneX;
 declare var uname;
-var contentViewHeight;
-var contentViewOffsetHeight;
-var topFrameOffset;
+let contentViewHeight;
+let contentViewOffsetHeight;
+let topFrameOffset;
 
 const checkIsIPhoneX = function() {
   if (typeof isIPhoneX === "undefined") {
@@ -246,7 +246,6 @@ class UITabBarControllerImpl extends UITabBarController {
           this.previousSelectedIndex = item.tag;
         }
 
-
         UIView.animateWithDurationDelayUsingSpringWithDampingInitialSpringVelocityOptionsAnimationsCompletion(
           .5,
           0,
@@ -420,7 +419,6 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
 
         //     const scale = CGAffineTransformMakeScale(1.4, 1.4);
         //     subView.transform = CGAffineTransformConcat(scale, CGAffineTransformMakeRotation(.2)); 
-  
               
         //     subView.alpha = 1;
         //     subView.layer.masksToBounds = false;
