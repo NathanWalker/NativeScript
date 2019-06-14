@@ -63,8 +63,9 @@ export class SegmentedBar extends SegmentedBarBase {
                 segmentedControl.insertSegmentWithTitleAtIndexAnimated(title, index, false);
             });
         }
-
-        selectedIndexProperty.coerce(this);
+        // coerce does not update style when resetting items on existing segmentedbar
+        segmentedControl.selectedSegmentIndex = 0; // default to 0 selected so at least an item is selected
+        // selectedIndexProperty.coerce(this);
     }
 
     [selectedBackgroundColorProperty.getDefault](): UIColor {
