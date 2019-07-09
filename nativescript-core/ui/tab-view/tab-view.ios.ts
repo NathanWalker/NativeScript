@@ -152,7 +152,8 @@ class UITabBarControllerImpl extends UITabBarController {
                 colors = [UIColor.colorWithRedGreenBlueAlpha(.64, .49, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1).CGColor];
                 break;
             case 1:
-                colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .84, .99, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor];
+                // colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .84, .99, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor];
+                colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .57, .92, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.71, .36, .87, 1).CGColor];
                 break;
             case 2:
                 colors = [UIColor.colorWithRedGreenBlueAlpha(1, .51, .46, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1).CGColor];
@@ -376,7 +377,8 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
                 backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1);
                 break;
             case 1:
-                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
+                // backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
+                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.71, .36, .87, 1);
                 break;
             case 2:
                 backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1);

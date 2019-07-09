@@ -89,9 +89,11 @@ class TabStrip extends LinearLayout {
         // Default selected color is the same as mTabTextColor
         mSelectedTabTextColor = mTabTextColor;
 
-        mShouldUpdateTabsTextColor = true;
+        setMeasureWithLargestChildEnabled(false);
 
-        setMeasureWithLargestChildEnabled(true);
+        // from latest 6.1.0 master upstream changes:
+        mShouldUpdateTabsTextColor = true;
+        // setMeasureWithLargestChildEnabled(true);
     }
 
     void setCustomTabColorizer(TabLayout.TabColorizer customTabColorizer) {
