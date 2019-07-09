@@ -1,10 +1,10 @@
-import { TabViewItem as TabViewItemDefinition } from ".";
+﻿import { TabViewItem as TabViewItemDefinition } from ".";
 import { Font } from "../styling/font";
 
 import { ios as iosView, ViewBase } from "../core/view";
 import {
     TabViewBase, TabViewItemBase, itemsProperty, selectedIndexProperty,
-    tabTextColorProperty, tabTextFontSizeProperty, tabBackgroundColorProperty, selectedTabTextColorProperty, iosIconRenderingModeProperty,
+    tabTextColorProperty, tabTextFontSizeProperty, tabBackgroundColorProperty, selectedTabTextColorProperty, iosIconRenderingModeProperty, tabGradientsProperty,
     View, fontInternalProperty, layout, traceEnabled, traceWrite, traceCategories, Color, traceMissingIcon
 } from "./tab-view-common";
 import { textTransformProperty, TextTransform, getTransformedText } from "../text-base";
@@ -49,7 +49,10 @@ const checkIsIPhoneX = function() {
 
 class UITabBarControllerImpl extends UITabBarController {
 
+    tabGradientColors: Array<any>;
+    tabGradients: Array<any>;
     private paintedBgForIndex: any;
+    private paintedGradientImages: any;
     private previousSelectedIndex: number;
     private _owner: WeakRef<TabView>;
 
@@ -111,61 +114,54 @@ class UITabBarControllerImpl extends UITabBarController {
         // avoid repainting gradient extraneously
         if (!this.paintedBgForIndex) {
           this.paintedBgForIndex = {};
+          this.paintedGradientImages = {};
         }
         if (owner.ios.tabBar.frame.origin.y > 0) {
           // handle case where a modal or some other view opens which upon closing resets UITabBar
           // re-layout the UITabBar in this case
-          this.paintedBgForIndex[this.selectedIndex] = false;
           didAdjust = true;
           tabBarHeight = 83;
 
+          // handle frame positioning
           if (isIPhoneX) {
             this.view.frame = CGRectMake(0, topFrameOffset, this.view.bounds.size.width, contentViewHeight - contentViewOffsetHeight);
+            const height = tabBarHeight || owner.ios.tabBar.bounds.size.height;
+            owner.ios.tabBar.frame = CGRectMake(0, offset, owner.ios.view.bounds.size.width, height);
           } else {
             this.view.frame = CGRectMake(0, topFrameOffset, this.view.bounds.size.width, contentViewHeight - contentViewOffsetHeight);
+            const height = tabBarHeight || owner.ios.tabBar.bounds.size.height;
+            owner.ios.tabBar.frame = CGRectMake(0, 0, owner.ios.view.bounds.size.width, height);
           }
         }
-        if (!this.paintedBgForIndex[this.selectedIndex]) {
+        if (this.tabGradients && !this.paintedBgForIndex[this.selectedIndex]) {
+          // console.log('changing gradient!!')
           // reset all indices
           for (var i = 0; i < 5; i++) {
             this.paintedBgForIndex[i] = false;
           }
           this.paintedBgForIndex[this.selectedIndex] = true;
 
-          // handle frame positioning
-          if (isIPhoneX) {
-              const height = tabBarHeight || owner.ios.tabBar.bounds.size.height;
-              owner.ios.tabBar.frame = CGRectMake(0, offset, owner.ios.view.bounds.size.width, height);
-              // Debug viewController y position underneath with:
-              // owner.ios.tabBar.alpha = .3;
-          }
-          else {
-              const height = tabBarHeight || owner.ios.tabBar.bounds.size.height;
-              owner.ios.tabBar.frame = CGRectMake(0, 0, owner.ios.view.bounds.size.width, height);
-          }
-
-          // TODO: Make a Property setter to allow colors to be set via hex from the view
-          // For now, this is all hard coded colors specific to Sweet app
-          let colors;
-          switch (this.selectedIndex) {
-            case 0:
-                colors = [UIColor.colorWithRedGreenBlueAlpha(.64, .49, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1).CGColor];
-                break;
-            case 1:
-                // colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .84, .99, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor];
-                colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .57, .92, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.71, .36, .87, 1).CGColor];
-                break;
-            case 2:
-                colors = [UIColor.colorWithRedGreenBlueAlpha(1, .51, .46, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1).CGColor];
-                break;
-            case 3:
-                colors = [UIColor.colorWithRedGreenBlueAlpha(.45, .57, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1).CGColor];
-                break;
-            case 4:
-                colors = [UIColor.colorWithRedGreenBlueAlpha(.01, .66, .71, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1).CGColor];
-                break;
-          }
-          this.changeBackgroundGradient(owner.ios, colors);
+          // Previously hard coded (leaving for example - this is now handled by tabGradients property)
+          // let colors;
+          // switch (this.selectedIndex) {
+          //   case 0:
+          //       colors = [UIColor.colorWithRedGreenBlueAlpha(.64, .49, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1).CGColor];
+          //       break;
+          //   case 1:
+          //       // colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .84, .99, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.92, .47, .83, 1).CGColor];
+          //       colors = [UIColor.colorWithRedGreenBlueAlpha(.27, .57, .92, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.71, .36, .87, 1).CGColor];
+          //       break;
+          //   case 2:
+          //       colors = [UIColor.colorWithRedGreenBlueAlpha(1, .51, .46, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1).CGColor];
+          //       break;
+          //   case 3:
+          //       colors = [UIColor.colorWithRedGreenBlueAlpha(.45, .57, 1, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1).CGColor];
+          //       break;
+          //   case 4:
+          //       colors = [UIColor.colorWithRedGreenBlueAlpha(.01, .66, .71, 1).CGColor, UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1).CGColor];
+          //       break;
+          // }
+          this.changeBackgroundGradient(owner.ios, this.tabGradients[this.selectedIndex]);
 
           // can make tabbar fully transparent with this:
           // owner.ios.tabBar.shadowImage = UIImage.new();
@@ -180,16 +176,22 @@ class UITabBarControllerImpl extends UITabBarController {
       if (!target) {
         return;
       }
-      // console.log('tabbar changeBackgroundGradient for index:', this.selectedIndex);
-      const layerGradient = CAGradientLayer.layer();
-      layerGradient.colors = NSArray.arrayWithArray(colors);
-      layerGradient.startPoint = CGPointMake(.5, 0);
-      layerGradient.endPoint = CGPointMake(.5, 1);
-      layerGradient.frame = CGRectMake(0, 0, target.view.bounds.size.width, target.tabBar.bounds.size.height);
-      UIGraphicsBeginImageContext(layerGradient.bounds.size);
-      layerGradient.renderInContext(UIGraphicsGetCurrentContext());
-      const resultImage = UIGraphicsGetImageFromCurrentImageContext();
-      target.tabBar.backgroundImage = resultImage;
+      if (!this.paintedGradientImages[this.selectedIndex]) {
+        // create gradients up front to make tab switches faster from the start
+        for (var i = 0; i < this.tabGradients.length; i++) {
+          // console.log('tabbar changeBackgroundGradient for index:', this.selectedIndex);
+          const layerGradient = CAGradientLayer.layer();
+          layerGradient.colors = NSArray.arrayWithArray(this.tabGradients[i]);
+          layerGradient.startPoint = CGPointMake(.5, 0);
+          layerGradient.endPoint = CGPointMake(.5, 1);
+          layerGradient.frame = CGRectMake(0, 0, target.view.bounds.size.width, target.tabBar.bounds.size.height);
+          UIGraphicsBeginImageContext(layerGradient.bounds.size);
+          layerGradient.renderInContext(UIGraphicsGetCurrentContext());
+          const resultImage = UIGraphicsGetImageFromCurrentImageContext();
+          this.paintedGradientImages[i] = resultImage;
+        }
+      }
+      target.tabBar.backgroundImage = this.paintedGradientImages[this.selectedIndex];
     }
 
     // @profile
@@ -217,6 +219,9 @@ class UITabBarControllerImpl extends UITabBarController {
         if (!owner) {
             return;
         }
+        // when selecting tabs, just reset bg painting so when it does a relayout will paint it with correct gradient above in viewWiilLayoutSubviews
+        this.paintedBgForIndex[this.selectedIndex] = false;
+
         // console.log('item tag (this is same as this.selectedIndex):', item.tag);
 
         // IMPORTANT NOTE:
@@ -368,35 +373,35 @@ class UITabBarControllerDelegateImpl extends NSObject implements UITabBarControl
         /**
          * CROSS DISSOLVE TRANSITION
          */
-        const fromView = owner.ios.viewControllers.objectAtIndex(owner.selectedIndex).view;
-        const toView = viewController.view;
-        if (fromView !== toView) {
-          let backgroundColor;
-          switch (owner.selectedIndex) {
-            case 0:
-                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1);
-                break;
-            case 1:
-                // backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
-                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.71, .36, .87, 1);
-                break;
-            case 2:
-                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1);
-                break;
-            case 3:
-                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1);
-                break;
-            case 4:
-                backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1);
-                break;
-          }
-          fromView.backgroundColor = backgroundColor;
-          toView.backgroundColor = backgroundColor;
+        // const fromView = owner.ios.viewControllers.objectAtIndex(owner.selectedIndex).view;
+        // const toView = viewController.view;
+        // if (fromView !== toView) {
+        //   let backgroundColor;
+        //   switch (owner.selectedIndex) {
+        //     case 0:
+        //         backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.93, .44, .73, 1);
+        //         break;
+        //     case 1:
+        //         // backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.28, .83, .98, 1);
+        //         backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.71, .36, .87, 1);
+        //         break;
+        //     case 2:
+        //         backgroundColor = UIColor.colorWithRedGreenBlueAlpha(1, .8, .28, 1);
+        //         break;
+        //     case 3:
+        //         backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.15, .85, 1, 1);
+        //         break;
+        //     case 4:
+        //         backgroundColor = UIColor.colorWithRedGreenBlueAlpha(.47, .95, .57, 1);
+        //         break;
+        //   }
+        //   fromView.backgroundColor = backgroundColor;
+        //   toView.backgroundColor = backgroundColor;
 
-          // UIView.transitionFromViewToViewDurationOptionsCompletion(fromView, toView, .3, UIViewAnimationOptions.TransitionCrossDissolve, (finished: boolean) => {
-          //   // ignore
-          // });
-        }
+        //   // UIView.transitionFromViewToViewDurationOptionsCompletion(fromView, toView, .3, UIViewAnimationOptions.TransitionCrossDissolve, (finished: boolean) => {
+        //   //   // ignore
+        //   // });
+        // }
 
         (<any>tabBarController)._willSelectViewController = viewController;
 
@@ -898,6 +903,49 @@ export class TabView extends TabViewBase {
         this._ios.tabBar.tintColor = value instanceof Color ? value.ios : value;
         this._updateIOSTabBarColorsAndFonts();
     }
+
+    /**
+     * Support tabGradients
+     */
+    [tabGradientsProperty.getDefault] () {
+      return this._ios.tabGradients;
+    }
+    [tabGradientsProperty.setNative](value) {
+        // console.log('tabGradients:', value);
+        // NOTE: should be this only:
+        // if (value) {
+        //   this._ios.tabGradients = value;
+        // }
+        // NOTE: valueConverted should work on Property but doesn't seem to be
+        let tabGradientColors; // used for background color tab switch animation
+        let tabGradients;
+        if (Array.isArray(value)) {
+          tabGradientColors = [];
+          tabGradients = [];
+          // convert to cgColor
+          for (let i = 0; i < value.length; i++) {
+            const tabColors = value[i];
+            // console.log('tabColors:', tabColors);
+            const convertedColors = [];
+            const convertedGradients = [];
+            for (let c = 0; c < tabColors.length; c++) {
+              const color = new Color(tabColors[c]).ios;
+              convertedColors.push(color);
+              convertedGradients.push(color.CGColor);
+            }
+            // console.log('converted:', converted);
+            tabGradientColors.push(convertedColors);
+            tabGradients.push(convertedGradients);
+          }
+        }
+        if (tabGradients) {
+          this._ios.tabGradientColors = tabGradientColors;
+          this._ios.tabGradients = tabGradients;
+        }
+    }
+    /**
+     * End tabGradients
+     */
 
     // TODO: Move this to TabViewItem
     [fontInternalProperty.getDefault](): Font {

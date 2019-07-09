@@ -272,3 +272,32 @@ selectedTabTextColorProperty.register(Style);
 
 export const androidSelectedTabHighlightColorProperty = new CssProperty<Style, Color>({ name: "androidSelectedTabHighlightColor", cssName: "android-selected-tab-highlight-color", equalityComparer: Color.equals, valueConverter: (v) => new Color(v) });
 androidSelectedTabHighlightColorProperty.register(Style);
+
+/**
+ * Tab gradients
+ */
+export const tabGradientsProperty = new Property<TabViewBase, Array<Array<string>>>({ 
+  name: "tabGradients"
+  // NOTE: this doesn't work not sure why?
+  // valueConverter: function (v) { 
+  //   var tabGradients;
+  //   console.log('tabGradientsProperty:', Array.isArray(v));
+  //   // console.log('tabGradientsProperty:',typeof v);
+  //   if (Array.isArray(v)) {
+  //     tabGradients = [];
+  //     // convert to cgColor
+  //     for (var i = 0; i < v.length; i++) {
+  //       var tabColors = v[i];
+  //       // console.log('tabColors:', tabColors);
+  //       var converted = [];
+  //       for (var c = 0; c < tabColors.length; c++) {
+  //         converted.push(new view_1.Color(tabColors[c]).ios.CGColor);
+  //       }
+  //       // console.log('converted:', converted);
+  //       tabGradients.push(converted);
+  //     }
+  //   }
+  //   return tabGradients;
+  // } 
+});
+tabGradientsProperty.register(TabViewBase);
