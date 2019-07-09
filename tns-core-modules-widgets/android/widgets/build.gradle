@@ -71,7 +71,8 @@ android {
 
 dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
-    
+    implementation 'com.android.support:exifinterface:' + computeSupportVersion()
+
     if(project.hasProperty("useAndroidX")) {
         println 'Using androix'
         def androidxVersion = computeAndroidXVersion()
