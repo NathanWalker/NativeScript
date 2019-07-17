@@ -48,6 +48,11 @@ export class Cache extends Observable {
      * The maximum number of simultaneous download requests. Defaults to 5.
      */
     maxRequests: number;
+    /**
+     * Whether to save image files to disk
+     */
+    saveFile: boolean;
+    debug: boolean;
 
     /**
      * Enables previously suspended download requests.

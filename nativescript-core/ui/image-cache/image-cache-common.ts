@@ -8,6 +8,15 @@ export interface DownloadRequest {
     completed?: (image: any, key: string) => void;
     error?: (key: string) => void;
 }
+export const SaveImageStorageKey = "http.saved-images";
+export function fileNameFromPath(fullPath: string) {
+  let filename = "";
+  if (fullPath) {
+    filename = fullPath.replace(/^.*[\\\/]/ig, "");
+  }
+
+  return filename;
+}
 
 export class Cache extends observable.Observable implements definition.Cache {
     public static downloadedEvent = "downloaded";
@@ -15,6 +24,8 @@ export class Cache extends observable.Observable implements definition.Cache {
 
     public placeholder: imageSource.ImageSource;
     public maxRequests = 5;
+    public saveFile: boolean;
+    public debug: boolean;
     private _enabled = true;
 
     private _pendingDownloads = {};
