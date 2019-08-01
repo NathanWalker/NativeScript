@@ -2,7 +2,7 @@
 import { ImageSource as ImageSourceDefinition } from ".";
 import { ImageAsset } from "../image-asset";
 import * as httpModule from "../http";
-
+declare var androidx;
 // Types.
 import { path as fsPath, knownFolders } from "../file-system";
 import { isFileOrResourcePath, RESOURCE_PREFIX, layout } from "../utils/utils";

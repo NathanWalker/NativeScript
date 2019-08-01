@@ -1,6 +1,6 @@
 import { ImageAssetBase, getRequestedImageSize } from "./image-asset-common";
 import { path as fsPath, knownFolders } from "../file-system";
-
+declare var androidx;
 export * from "./image-asset-common";
 
 export class ImageAsset extends ImageAssetBase {
@@ -71,17 +71,18 @@ export class ImageAsset extends ImageAssetBase {
 
 function calculateAngleFromFile(filename: string) {
     let rotationAngle = 0;
-    const ei = new android.support.media.ExifInterface(filename);
-    const orientation = ei.getAttributeInt(android.support.media.ExifInterface.TAG_ORIENTATION, android.support.media.ExifInterface.ORIENTATION_NORMAL);
+    const ExifInterface = androidx.exifinterface.media.ExifInterface;
+    const ei = new ExifInterface(filename);
+    const orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
     switch (orientation) {
-        case android.support.media.ExifInterface.ORIENTATION_ROTATE_90:
+        case ExifInterface.ORIENTATION_ROTATE_90:
             rotationAngle = 90;
             break;
-        case android.support.media.ExifInterface.ORIENTATION_ROTATE_180:
+        case ExifInterface.ORIENTATION_ROTATE_180:
             rotationAngle = 180;
             break;
-        case android.support.media.ExifInterface.ORIENTATION_ROTATE_270:
+        case ExifInterface.ORIENTATION_ROTATE_270:
             rotationAngle = 270;
             break;
     }
