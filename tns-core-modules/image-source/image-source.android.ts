@@ -2,7 +2,7 @@
 import { ImageSource as ImageSourceDefinition } from ".";
 import { ImageAsset } from "../image-asset";
 import * as httpModule from "../http";
-
+declare var androidx;
 // Types.
 import { path as fsPath, knownFolders } from "../file-system";
 import { isFileOrResourcePath, RESOURCE_PREFIX, layout } from "../utils/utils";
@@ -81,17 +81,18 @@ export class ImageSource implements ImageSourceDefinition {
 
     private setRotationAngleFromFile(filename: string) {
         this.rotationAngle = 0;
-        const ei = new android.support.media.ExifInterface(filename);
-        const orientation = ei.getAttributeInt(android.support.media.ExifInterface.TAG_ORIENTATION, android.support.media.ExifInterface.ORIENTATION_NORMAL);
+        const ExifInterface = androidx.exifinterface.media.ExifInterface;
+        const ei = new ExifInterface(filename);
+        const orientation = ei.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
 
         switch (orientation) {
-            case android.support.media.ExifInterface.ORIENTATION_ROTATE_90:
+            case ExifInterface.ORIENTATION_ROTATE_90:
                 this.rotationAngle = 90;
                 break;
-            case android.support.media.ExifInterface.ORIENTATION_ROTATE_180:
+            case ExifInterface.ORIENTATION_ROTATE_180:
                 this.rotationAngle = 180;
                 break;
-            case android.support.media.ExifInterface.ORIENTATION_ROTATE_270:
+            case ExifInterface.ORIENTATION_ROTATE_270:
                 this.rotationAngle = 270;
                 break;
         }
@@ -175,7 +176,7 @@ export class ImageSource implements ImageSourceDefinition {
         canvas.drawText(source, -textBounds.left, -textBounds.top, paint);
 
         this.android = bitmap;
-    
+
         return this.android != null;
     }
 
