@@ -4,8 +4,10 @@ import {
     colorProperty, fontInternalProperty, Color
 } from "./segmented-bar-common";
 import { ios as iosUtils } from "../../utils/utils";
-export * from "./segmented-bar-common";
+import { device } from '../../platform';
 
+export * from "./segmented-bar-common";
+const isIOS13 = parseInt(device.osVersion) >= 13;
 export class SegmentedBarItem extends SegmentedBarItemBase {
     public _update() {
         const parent = <SegmentedBar>this.parent;
@@ -82,6 +84,14 @@ export class SegmentedBar extends SegmentedBarBase {
             this.ios.selectedSegmentTintColor = color;
         }
         
+        // this.ios.tintColor = color;
+        // if (isIOS13) {
+        //   // CUSTOM - just ensuring white background segment doesn't have white text (just making them black for now)
+        //   const currentAttrs = this.ios.titleTextAttributesForState(UIControlState.Selected);
+        //   const attrs = currentAttrs ? currentAttrs.mutableCopy() : NSMutableDictionary.new();
+        //   attrs.setValueForKey(UIColor.blackColor, NSForegroundColorAttributeName);
+        //   this.ios.setTitleTextAttributesForState(attrs, UIControlState.Selected);
+        // }
     }
 
     [colorProperty.getDefault](): UIColor {
