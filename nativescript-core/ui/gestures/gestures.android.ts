@@ -68,7 +68,7 @@ function initializeTapAndDoubleTapGestureListener() {
         }
 
         private _handleSingleTap(motionEvent: android.view.MotionEvent): void {
-            if (this._target.getGestureObservers(GestureTypes.doubleTap)) {
+            if (this._target && this._target.getGestureObservers(GestureTypes.doubleTap)) {
                 this._tapTimeoutId = timer.setTimeout(() => {
                     if (this._type & GestureTypes.tap) {
                         const args = _getArgs(GestureTypes.tap, this._target, motionEvent);
