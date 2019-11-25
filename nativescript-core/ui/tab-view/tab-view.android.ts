@@ -709,13 +709,14 @@ export class TabView extends TabViewBase {
     }
 
     [selectedIndexProperty.setNative](value: number) {
+      // TODO: instead of making smoothScroll dependent on just tab position, make explicit setting
         const smoothScroll = this.androidTabsPosition === "top";
 
         if (traceEnabled()) {
             traceWrite("TabView this._viewPager.setCurrentItem(" + value + ", " + smoothScroll + ");", traceCategory);
         }
 
-        this._viewPager.setCurrentItem(value, smoothScroll);
+        this._viewPager.setCurrentItem(value, false);//smoothScroll);
     }
 
     [itemsProperty.getDefault](): TabViewItem[] {

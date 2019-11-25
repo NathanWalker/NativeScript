@@ -42,6 +42,15 @@ class WKNavigationDelegateImpl extends NSObject
                 traceWrite("WKNavigationDelegateClass.webViewDecidePolicyForNavigationActionDecisionHandler(" + navigationAction.request.URL.absoluteString + ", " + navigationAction.navigationType + ")", traceCategories.Debug);
             }
             owner._onLoadStarted(navigationAction.request.URL.absoluteString, navType);
+        } else if (decisionHandler) {
+          // CUSTOM
+          // fix:
+          // Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'Completion handler passed to -[NSProxy webView:decidePolicyForNavigationAction:decisionHandler:] was not called'
+          try {
+            decisionHandler(0);
+          } catch (err) {
+            decisionHandler(0);
+          }
         }
     }
 
@@ -134,7 +143,10 @@ export class WebView extends WebViewBase {
     }
 
     public onUnloaded() {
-        this.ios.navigationDelegate = null;
+        // CUSTOM - FIX to prevent web-view crash when navigating away from marketplace after filter was put in place - in general, not sure this needs to be here at all anyway
+        // if (this.ios) {
+        //   this.ios.navigationDelegate = null;
+        // }
         super.onUnloaded();
     }
 
