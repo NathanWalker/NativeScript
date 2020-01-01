@@ -179,7 +179,7 @@ function buildJavaOptions(options: httpModule.HttpRequestOptions) {
     if (typeof options.method === "string") {
         javaOptions.method = options.method;
     }
-    if (typeof options.content === "string" || options.content instanceof FormData) {
+    if (typeof options.content === "string") {
         javaOptions.content = options.content.toString();
     }
     if (typeof options.timeout === "number") {

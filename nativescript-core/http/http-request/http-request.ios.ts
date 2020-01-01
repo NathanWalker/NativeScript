@@ -93,7 +93,7 @@ export function request(options: httpModule.HttpRequestOptions): Promise<httpMod
                 }
             }
 
-            if (types.isString(options.content) || options.content instanceof FormData) {
+            if (types.isString(options.content)) {
                 urlRequest.HTTPBody = NSString.stringWithString(options.content.toString()).dataUsingEncoding(4);
             }
 

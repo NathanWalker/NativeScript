@@ -90,7 +90,7 @@ export class Cache extends common.Cache {
 
         let imageSetting;
         let requests: number = 0;
-        if (this.saveFile) {
+        if (this.saveFile && !request.ignoreCacheFileSave) {
             imageSetting = this._savedImages[request.url];
             requests = imageSetting ? imageSetting.requests : 0;
             if (imageSetting && imageSetting.localPath && File.exists(imageSetting.localPath)) {
@@ -123,7 +123,7 @@ export class Cache extends common.Cache {
                 try {
                     const image = UIImage.alloc().initWithData(response.content.raw);
                     
-                    if (this.saveFile) {
+                    if (this.saveFile && !request.ignoreCacheFileSave) {
                       let filename = common.fileNameFromPath(request.url);
                       if (filename.indexOf("?") > -1) {
                         // strip any params if were any

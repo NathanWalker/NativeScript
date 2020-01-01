@@ -6,7 +6,7 @@ import { LinearGradient } from "./linear-gradient";
 import { Color } from "../../color";
 import { isDataURI, isFileOrResourcePath, layout } from "../../utils/utils";
 import { ImageSource } from "../../image-source";
-import { CSSValue, parse as cssParse } from "../../css-value";
+import { CSSValue, parse as cssParse } from "../../css-value/reworkcss-value";
 
 export * from "./background-common";
 

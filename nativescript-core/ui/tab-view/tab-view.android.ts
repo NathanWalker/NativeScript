@@ -200,18 +200,41 @@ function initializeNativeClasses() {
         }
 
         destroyItem(container: android.view.ViewGroup, position: number, object: java.lang.Object): void {
+          let fragmentManager;
             if (!this.mCurTransaction) {
-                const fragmentManager = this.owner._getFragmentManager();
-                this.mCurTransaction = fragmentManager.beginTransaction();
+              fragmentManager = this.owner._getFragmentManager();
+              this.mCurTransaction = fragmentManager.beginTransaction();
+            }
+            const fragment: any = object;
+
+            if (fragment && fragment.isAdded() && !fragment.isRemoving()) {
+              var pfm = fragment.getParentFragmentManager();
+              if (pfm !== fragmentManager) {
+                console.log("Frame.prototype.disposeCurrentFragment: pfm !== fragmentManager");
+              }
+              if (pfm && !pfm.isDestroyed()) {
+                try {
+                  if (pfm.isStateSaved()) {
+                    pfm
+                      .beginTransaction()
+                      .remove(fragment)
+                      .commitNowAllowingStateLoss();
+                  } else {
+                    pfm
+                      .beginTransaction()
+                      .remove(fragment)
+                      .commitNow();
+                  }
+                } catch (e) {
+                  //
+                }
+              }
             }
 
-            const fragment: androidx.fragment.app.Fragment = <androidx.fragment.app.Fragment>object;
-            this.mCurTransaction.detach(fragment);
-
+            // this.mCurTransaction.detach(fragment);
             if (this.mCurrentPrimaryItem === fragment) {
                 this.mCurrentPrimaryItem = null;
             }
-
             const tabItems = this.owner.items;
             const tabItem = tabItems ? tabItems[position] : null;
             if (tabItem) {

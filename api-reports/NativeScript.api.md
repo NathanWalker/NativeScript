@@ -560,6 +560,7 @@ export interface DownloadError extends EventData {
 export interface DownloadRequest {
     completed?: (image: any, key: string) => void;
     error?: (key: string) => void;
+    ignoreCacheFileSave?: boolean;
     key: string;
     url: string;
 }
@@ -1103,6 +1104,8 @@ export interface ImageAssetOptions {
 // @public
 export class ImageCache extends Observable {
     clear(): void;
+    // (undocumented)
+    debug: boolean;
     disableDownload(): void;
     // (undocumented)
     _downloadCore(request: DownloadRequest);
@@ -1122,6 +1125,7 @@ export class ImageCache extends Observable {
     placeholder: ImageSource;
     push(request: DownloadRequest);
     remove(key: string): void;
+    saveFile: boolean;
     set(key: string, image: any): void;
     //@endprivate
 }

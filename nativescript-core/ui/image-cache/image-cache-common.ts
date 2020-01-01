@@ -5,6 +5,7 @@ import * as imageSource from "../../image-source";
 export interface DownloadRequest {
     url: string;
     key: string;
+    ignoreCacheFileSave?: boolean;
     completed?: (image: any, key: string) => void;
     error?: (key: string) => void;
 }

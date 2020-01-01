@@ -77,8 +77,6 @@ export class XMLHttpRequest {
                 //a request body for GET requests, so we avoid doing that.
                 //Browser implementations silently ignore it as well.
                 this._options.content = data;
-            } else if (data instanceof FormData) {
-                this._options.content = (<FormData>data).toString();
             }
 
             http.request(this._options).then(r => {

@@ -259,26 +259,48 @@ export class Frame extends FrameBase {
     }
 
     private disposeCurrentFragment(): void {
-        if (!this._currentEntry ||
-            !this._currentEntry.fragment ||
-            !this._currentEntry.fragment.isAdded()) {
-            return;
+      if (
+        !this._currentEntry ||
+        !this._currentEntry.fragment ||
+        !this._currentEntry.fragment.isAdded() ||
+        this._currentEntry.fragment.isRemoving()
+      ) {
+        return;
+      }
+
+      const fragmentManager: androidx.fragment.app.FragmentManager = this._getFragmentManager();
+      const transaction = fragmentManager.beginTransaction();
+      const fragment = this._currentEntry.fragment;
+      const fragmentExitTransition = fragment.getExitTransition();
+      
+      if (fragmentExitTransition && fragmentExitTransition instanceof org.nativescript.widgets.CustomTransition) {
+        fragmentExitTransition.setResetOnTransitionEnd(true);
+      }
+      if (fragment && fragment.isAdded() && !fragment.isRemoving()) {
+        var pfm = fragment.getParentFragmentManager();
+        if (pfm !== fragmentManager) {
+          console.error("Frame.prototype.disposeCurrentFragment: pfm !== fragmentManager");
         }
-
-        const manager: androidx.fragment.app.FragmentManager = this._getFragmentManager();
-        const transaction = manager.beginTransaction();
-        const fragment = this._currentEntry.fragment;
-        const fragmentExitTransition = fragment.getExitTransition();
-
-        // Reset animation to its initial state to prevent mirrorered effect when restore current fragment transitions
-        if (fragmentExitTransition && fragmentExitTransition instanceof org.nativescript.widgets.CustomTransition) {
-            fragmentExitTransition.setResetOnTransitionEnd(true);
+        if (pfm && !pfm.isDestroyed()) {
+          try {
+            if (pfm.isStateSaved()) {
+              pfm
+                .beginTransaction()
+                .remove(fragment)
+                .commitNowAllowingStateLoss();
+            } else {
+              pfm
+                .beginTransaction()
+                .remove(fragment)
+                .commitNow();
+            }
+          } catch (e) {
+            //
+          }
         }
-
-        transaction.remove(fragment);
-        transaction.commitNowAllowingStateLoss();
+      }
     }
-
+    
     private createFragment(backstackEntry: BackstackEntry, fragmentTag: string): androidx.fragment.app.Fragment {
         ensureFragmentClass();
         const newFragment = new fragmentClass();
@@ -968,7 +990,9 @@ class FragmentCallbacksImplementation implements AndroidFragmentCallbacks {
                 this.backgroundBitmap = null;
             }
         } finally {
+          if (superFunc && fragment) {
             superFunc.call(fragment);
+          }
         }
     }
 
@@ -1012,13 +1036,17 @@ class FragmentCallbacksImplementation implements AndroidFragmentCallbacks {
                 this.backgroundBitmap = this.loadBitmapFromView(this.frame.nativeViewProtected);
             }
         } finally {
+          if (superFunc && fragment) {
             superFunc.call(fragment);
+          }
         }
     }
 
     @profile
     public onStop(fragment: androidx.fragment.app.Fragment, superFunc: Function): void {
+      if (superFunc && fragment) {
         superFunc.call(fragment);
+      }
     }
 
     @profile
@@ -1191,7 +1219,9 @@ class ActivityCallbacksImplementation implements AndroidActivityCallbacks {
             const exitArgs = { eventName: application.exitEvent, object: application.android, android: activity };
             application.notify(exitArgs);
         } finally {
+          if (superFunc && activity) {
             superFunc.call(activity);
+          }
         }
     }
 

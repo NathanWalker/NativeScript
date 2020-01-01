@@ -23,6 +23,7 @@ import android.graphics.Matrix;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.support.media.ExifInterface;
+// import androidx.exifinterface.media.ExifInterface;
 import android.os.Build;
 import android.util.Log;
 import android.util.TypedValue;
@@ -430,7 +431,9 @@ public class Fetcher extends Worker {
             if (Utils.hasN()) {
                 ei = new ExifInterface(is);
             }
-        } catch (final Exception e) {
+        // } catch (Exception e) {
+        //     Log.e(TAG, "Error in reading bitmap - " + e);
+        } catch (final IOException e) {
             Log.e(TAG, "Error in reading bitmap - " + e);
         } finally {
             if (is != null) {
@@ -448,7 +451,9 @@ public class Fetcher extends Worker {
         ExifInterface ei = null;
         try {
             ei = new ExifInterface(fileName);
-        } catch (final Exception e) {
+        // } catch (Exception e) {
+        //     Log.e(TAG, "Error in reading bitmap - " + e);
+        } catch (final IOException e) {
             Log.e(TAG, "Error in reading bitmap - " + e);
         }
 

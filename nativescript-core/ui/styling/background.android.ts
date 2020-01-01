@@ -2,7 +2,7 @@ import { View } from "../core/view";
 import { LinearGradient } from "./linear-gradient";
 
 import { isDataURI, isFileOrResourcePath, layout, RESOURCE_PREFIX, FILE_PREFIX } from "../../utils/utils";
-import { parse } from "../../css-value";
+import { parse } from "../../css-value/reworkcss-value";
 import { path, knownFolders } from "../../file-system";
 import * as application from "../../application";
 import { profile } from "../../profiling";

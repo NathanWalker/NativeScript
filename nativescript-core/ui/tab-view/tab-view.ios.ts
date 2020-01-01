@@ -41,8 +41,12 @@ const checkIsIPhoneX = function() {
     if (parts && parts.length > 1) {
       const versionNumber = parseInt(parts[1]);
       if (!isNaN(versionNumber)) {
-        isIPhoneX = versionNumber >= 10;
+        isIPhoneX = versionNumber >= 11;
       }
+    }
+    if (!isIPhoneX) {
+      // consider iphone x global and iphone x gsm
+      isIPhoneX = name.indexOf('iPhone10,3') === 0 || name.indexOf('iPhone10,6') === 0;
     }
     // isIPhoneX =
     //     name.indexOf("iPhone10,3") === 0 ||

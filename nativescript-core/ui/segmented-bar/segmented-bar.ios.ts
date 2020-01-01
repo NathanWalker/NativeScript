@@ -82,16 +82,12 @@ export class SegmentedBar extends SegmentedBarBase {
             this.ios.tintColor = color;
         } else {
             this.ios.selectedSegmentTintColor = color;
+            // CUSTOM - just ensuring white background segment doesn't have white text (just making them black for now)
+            const currentAttrs = this.ios.titleTextAttributesForState(UIControlState.Selected);
+            const attrs = currentAttrs ? currentAttrs.mutableCopy() : NSMutableDictionary.new();
+            attrs.setValueForKey(UIColor.blackColor, NSForegroundColorAttributeName);
+            this.ios.setTitleTextAttributesForState(attrs, UIControlState.Selected);
         }
-        
-        // this.ios.tintColor = color;
-        // if (isIOS13) {
-        //   // CUSTOM - just ensuring white background segment doesn't have white text (just making them black for now)
-        //   const currentAttrs = this.ios.titleTextAttributesForState(UIControlState.Selected);
-        //   const attrs = currentAttrs ? currentAttrs.mutableCopy() : NSMutableDictionary.new();
-        //   attrs.setValueForKey(UIColor.blackColor, NSForegroundColorAttributeName);
-        //   this.ios.setTitleTextAttributesForState(attrs, UIControlState.Selected);
-        // }
     }
 
     [colorProperty.getDefault](): UIColor {

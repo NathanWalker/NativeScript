@@ -19,6 +19,10 @@ export interface DownloadRequest {
      */
     key: string;
     /**
+     * whether to override any saveFile settings 
+     */
+    ignoreCacheFileSave?: boolean;
+    /**
      * An optional function to be called when the download is complete.
      */
     completed?: (image: any, key: string) => void;

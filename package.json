@@ -53,5 +53,6 @@
     "typedoc-dev": "npm run typedoc && cd bin/dist/apiref && npx http-server",
     "build-core": "sh ./build/build-core.sh",
     "build-compat": "sh ./build/build-compat.sh"
-  }
+  },
+  "dependencies": {}
 }
