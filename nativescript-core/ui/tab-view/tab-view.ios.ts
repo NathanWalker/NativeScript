@@ -200,7 +200,7 @@ class UITabBarControllerImpl extends UITabBarController {
         // handle case where a modal or some other view opens which upon closing resets UITabBar
         // re-layout the UITabBar in this case
         const offset = 0;
-        const tabBarHeight = 83;
+        const tabBarHeight = 50;//83;
 
         // handle frame positioning
         if (isIPhoneX) {
