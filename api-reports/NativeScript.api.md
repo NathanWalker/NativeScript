@@ -2475,6 +2475,8 @@ export class TextField extends EditableTextBase {
     public static returnPressEvent: string;
 
     secure: boolean;
+
+    secureWithoutAutofill: boolean;
 }
 
 // @public
