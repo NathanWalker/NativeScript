@@ -92,6 +92,7 @@ function onRequestComplete(requestId: number, result: org.nativescript.widgets.A
     callbacks.resolveCallback({
         content: {
             raw: result.raw,
+            toArrayBuffer: () => Uint8Array.from(result.raw.toByteArray()).buffer,
             toString: (encoding?: HttpResponseEncoding) => {
                 let str: string;
                 if (encoding) {
@@ -179,8 +180,17 @@ function buildJavaOptions(options: httpModule.HttpRequestOptions) {
     if (typeof options.method === "string") {
         javaOptions.method = options.method;
     }
-    if (typeof options.content === "string") {
-        javaOptions.content = options.content.toString();
+    // if (typeof options.content === "string") {
+    //     javaOptions.content = options.content.toString();
+    if (typeof options.content === "string" || options.content instanceof FormData) {
+        const nativeString = new java.lang.String(options.content.toString());
+        const nativeBytes = nativeString.getBytes("UTF-8");
+        const nativeBuffer = java.nio.ByteBuffer.wrap(nativeBytes);
+        javaOptions.content = nativeBuffer;
+    } else if (options.content instanceof ArrayBuffer) {
+        const typedArray = new Uint8Array(options.content as ArrayBuffer);
+        const nativeBuffer = java.nio.ByteBuffer.wrap(Array.from(typedArray));
+        javaOptions.content = nativeBuffer;
     }
     if (typeof options.timeout === "number") {
         javaOptions.timeout = options.timeout;
