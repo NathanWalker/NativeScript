@@ -17,8 +17,9 @@
 package org.nativescript.widgets;
 
 import android.content.Context;
-import android.graphics.Typeface;
 import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.SparseArray;
@@ -29,6 +30,7 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 public class BottomNavigationBar extends LinearLayout {
@@ -40,7 +42,7 @@ public class BottomNavigationBar extends LinearLayout {
 
         /**
          * @return return the color of the indicator used when {@code position}
-         *         is selected.
+         * is selected.
          */
         int getIndicatorColor(int position);
 
@@ -49,7 +51,11 @@ public class BottomNavigationBar extends LinearLayout {
     private static final int BOTTOM_NAV_HEIGHT = 56;
     private static final int ITEM_TEXT_SIZE_SP = 12;
     private static final int ITEM_TEXT_MAX_WIDTH = 144;
-
+    public static int NOTIFICATION_ICON_SIZE = 8;
+    public static boolean NOTIFICATION_ICON_SHOW_COUNT = false;
+    public static int NOTIFICATION_ICON_COUNT_TEXT_SIZE_SP = 6;
+    public static int[] NOTIFICATION_GRADIENT_COLORS;
+    public static int NOTIFICATION_GRADIENT_COLOR = Color.RED;
     private TabItemSpec[] mTabItems;
     private SparseArray<String> mContentDescriptions = new SparseArray<String>();
 
@@ -74,35 +80,43 @@ public class BottomNavigationBar extends LinearLayout {
 
     /**
      * Set the custom {@link TabColorizer} to be used.
-     *
+     * <p>
      * If you only require simple customisation then you can use
      */
     public void setCustomTabColorizer(TabColorizer tabColorizer) {
 //        mTabStrip.setCustomTabColorizer(tabColorizer);
     }
 
-    public void setTabTextColor(int color){
+    public void setTabTextColor(int color) {
         mTabStrip.setTabTextColor(color);
     }
 
-    public int getTabTextColor(){
+    public int getTabTextColor() {
         return mTabStrip.getTabTextColor();
     }
 
-    public void setSelectedTabTextColor(int color){
+    public void setSelectedTabTextColor(int color) {
         mTabStrip.setSelectedTabTextColor(color);
     }
 
-    public int getSelectedTabTextColor(){
+    public int getSelectedTabTextColor() {
         return mTabStrip.getSelectedTabTextColor();
     }
 
-    public void setTabTextFontSize(float fontSize){
+    public void setTabTextFontSize(float fontSize) {
         mTabStrip.setTabTextFontSize(fontSize);
     }
 
-    public float getTabTextFontSize(){
+    public float getTabTextFontSize() {
         return mTabStrip.getTabTextFontSize();
+    }
+
+    public float getTabNotificationTextFontSize() {
+        return mTabStrip.getTabNotificationTextFontSize();
+    }
+
+    public void setTabNotificationTextFontSize(float fontSize) {
+        mTabStrip.setTabNotificationTextFontSize(fontSize);
     }
 
     public void setItems(TabItemSpec[] items) {
@@ -115,38 +129,103 @@ public class BottomNavigationBar extends LinearLayout {
      * Updates the UI of an item at specified index
      */
     public void updateItemAt(int position, TabItemSpec tabItem) {
-        LinearLayout ll = (LinearLayout)mTabStrip.getChildAt(position);
-        ImageView imgView = (ImageView)ll.getChildAt(0);
-        TextView textView = (TextView)ll.getChildAt(1);
+        LinearLayout ll = (LinearLayout) mTabStrip.getChildAt(position);
+        RelativeLayout rl = (RelativeLayout) ll.getChildAt(0);
+        ImageView imgView = (ImageView) rl.getChildAt(0);
+        TextView textView = (TextView) ll.getChildAt(1);
         this.setupItem(ll, textView, imgView, tabItem);
     }
-  
+
     /**
      * Gets the TextView for tab item at index
      */
-    public TextView getTextViewForItemAt(int index){
+    public TextView getNotificationTextViewForItemAt(int index) {
         LinearLayout ll = this.getViewForItemAt(index);
-        return  (ll != null) ? (TextView)ll.getChildAt(1) : null;       
+        if (ll != null) {
+            RelativeLayout rl = (RelativeLayout) ll.getChildAt(0);
+            RelativeLayout layout = (RelativeLayout) rl.getChildAt(1);
+            return (TextView) layout.getChildAt(1);
+        }
+        return null;
     }
-    
+
+
+    /**
+     * Hide/Show the notification for tab item at index
+     */
+    public void showNotificationForItemAt(int index, boolean show) {
+        LinearLayout ll = this.getViewForItemAt(index);
+        if (ll != null) {
+            RelativeLayout rl = (RelativeLayout) ll.getChildAt(0);
+            RelativeLayout layout = (RelativeLayout) rl.getChildAt(1);
+            if (show) {
+                layout.setVisibility(View.VISIBLE);
+            } else {
+                layout.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
+
+    /**
+     * Gets the TextView for tab item at index
+     */
+    public TextView getTextViewForItemAt(int index) {
+        LinearLayout ll = this.getViewForItemAt(index);
+        return (ll != null) ? (TextView) ll.getChildAt(1) : null;
+    }
+
     /**
      * Gets the LinearLayout container for tab item at index
      */
-    public LinearLayout getViewForItemAt(int index){
+    public LinearLayout getViewForItemAt(int index) {
         LinearLayout result = null;
-        
-        if(this.mTabStrip.getChildCount() > index){
-            result = (LinearLayout)this.mTabStrip.getChildAt(index);
+
+        if (this.mTabStrip.getChildCount() > index) {
+            result = (LinearLayout) this.mTabStrip.getChildAt(index);
         }
-        
+
         return result;
     }
 
     /**
      * Gets the number of realized tabs.
      */
-    public int getItemCount(){
+    public int getItemCount() {
         return this.mTabStrip.getChildCount();
+    }
+
+
+    public void updateIconSizeAt(int index, final int size) {
+        final LinearLayout layout = getViewForItemAt(index);
+        RelativeLayout rl = (RelativeLayout) layout.getChildAt(0);
+        final ImageView iconView = (ImageView) rl.getChildAt(0);
+        final RelativeLayout icon = (RelativeLayout) rl.getChildAt(1);
+        final int width = (int) (size * getResources().getDisplayMetrics().density);
+        icon.post(new Runnable() {
+            @Override
+            public void run() {
+                RelativeLayout.LayoutParams old = (RelativeLayout.LayoutParams) icon.getLayoutParams();
+                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                        old.width, old.height
+                );
+                params.leftMargin = iconView.getWidth();
+                icon.setLayoutParams(params);
+            }
+        });
+        iconView.post(new Runnable() {
+            @Override
+            public void run() {
+                RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                        android.widget.RelativeLayout.LayoutParams.WRAP_CONTENT,
+                        width
+                );
+                params.addRule(RelativeLayout.CENTER_VERTICAL);
+                params.addRule(RelativeLayout.CENTER_HORIZONTAL);
+                iconView.setLayoutParams(params);
+
+            }
+        });
     }
 
     /**
@@ -154,7 +233,11 @@ public class BottomNavigationBar extends LinearLayout {
      */
     protected View createDefaultTabView(Context context, TabItemSpec tabItem) {
         float density = getResources().getDisplayMetrics().density;
-
+        int maxWidth = 0;
+        View root = findViewById(android.R.id.content);
+        if (root != null) {
+            maxWidth = root.getWidth();
+        }
         LinearLayout ll = new LinearLayout(context);
         ll.setLayoutParams(new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.MATCH_PARENT));
         ll.setGravity(Gravity.CENTER);
@@ -163,11 +246,57 @@ public class BottomNavigationBar extends LinearLayout {
         getContext().getTheme().resolveAttribute(android.R.attr.selectableItemBackground, outValue, true);
         ll.setBackgroundResource(outValue.resourceId);
 
+        RelativeLayout rl = new RelativeLayout(context);
+        rl.setLayoutParams(
+                new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+        );
         ImageView imgView = new ImageView(context);
         imgView.setScaleType(ScaleType.FIT_CENTER);
-        LinearLayout.LayoutParams imgLP = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        imgLP.gravity = Gravity.CENTER;
+        RelativeLayout.LayoutParams imgLP = new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        imgLP.addRule(RelativeLayout.CENTER_VERTICAL);
+        imgLP.addRule(RelativeLayout.CENTER_HORIZONTAL);
         imgView.setLayoutParams(imgLP);
+        rl.addView(imgView);
+
+
+        RelativeLayout notifIcon = new RelativeLayout(context);
+        RelativeLayout.LayoutParams notfiLP = new RelativeLayout.LayoutParams(
+                (int) (NOTIFICATION_ICON_SIZE * density), (int) (NOTIFICATION_ICON_SIZE * density));
+        if (maxWidth > 0) {
+            int size = (maxWidth / mTabItems.length) / 2;
+            notfiLP.leftMargin = (int) ((size * density) * 0.25);
+        }
+        notfiLP.topMargin = (int) ((BOTTOM_NAV_HEIGHT * density) * 0.1);
+        notifIcon.setLayoutParams(notfiLP);
+        notfiLP.addRule(RelativeLayout.ALIGN_PARENT_TOP);
+        notfiLP.addRule(RelativeLayout.CENTER_HORIZONTAL);
+
+
+
+        GradientDrawable circle = new GradientDrawable();
+        circle.setShape(GradientDrawable.OVAL);
+        if (NOTIFICATION_GRADIENT_COLORS != null) {
+            circle.setColors(NOTIFICATION_GRADIENT_COLORS);
+        } else {
+            circle.setColor(NOTIFICATION_GRADIENT_COLOR);
+        }
+        notifIcon.setBackground(circle);
+        notifIcon.setVisibility(View.INVISIBLE);
+
+
+        TextView iconCountTextView = new TextView(context);
+        iconCountTextView.setGravity(Gravity.CENTER);
+        iconCountTextView.setMaxWidth((int) (NOTIFICATION_ICON_SIZE * density));
+        iconCountTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, NOTIFICATION_ICON_COUNT_TEXT_SIZE_SP);
+        iconCountTextView.setTypeface(Typeface.DEFAULT_BOLD);
+        iconCountTextView.setEllipsize(TextUtils.TruncateAt.END);
+        iconCountTextView.setMaxLines(1);
+        iconCountTextView.setLayoutParams(new RelativeLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        notifIcon.addView(iconCountTextView);
+
+        rl.addView(notifIcon);
+
 
         TextView textView = new TextView(context);
         textView.setGravity(Gravity.CENTER);
@@ -180,14 +309,14 @@ public class BottomNavigationBar extends LinearLayout {
 
         this.setupItem(ll, textView, imgView, tabItem);
 
-        ll.addView(imgView);
+        ll.addView(rl);
         ll.addView(textView);
         return ll;
     }
-    
-    private void setupItem(LinearLayout ll, TextView textView,ImageView imgView, TabItemSpec tabItem){
+
+    private void setupItem(final LinearLayout ll, TextView textView, final ImageView imgView, TabItemSpec tabItem) {
         float density = getResources().getDisplayMetrics().density;
-        
+
         if (tabItem.iconId != 0) {
             imgView.setImageResource(tabItem.iconId);
             imgView.setVisibility(VISIBLE);
@@ -198,6 +327,23 @@ public class BottomNavigationBar extends LinearLayout {
             imgView.setVisibility(GONE);
         }
 
+        imgView.post(new Runnable() {
+            @Override
+            public void run() {
+                int width = imgView.getDrawable().getIntrinsicWidth();
+                if (width > 0) {
+                    RelativeLayout rl = (RelativeLayout) ll.getChildAt(0);
+                    RelativeLayout icon = (RelativeLayout) rl.getChildAt(1);
+                    RelativeLayout.LayoutParams old = (RelativeLayout.LayoutParams) icon.getLayoutParams();
+                    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                            old.width, old.height
+                    );
+                    params.leftMargin = imgView.getWidth();
+                    icon.setLayoutParams(params);
+                }
+
+            }
+        });
         if (tabItem.title != null && !tabItem.title.isEmpty()) {
             textView.setText(tabItem.title);
             textView.setVisibility(VISIBLE);
@@ -205,14 +351,14 @@ public class BottomNavigationBar extends LinearLayout {
             if (tabItem.typeFace != null) {
                 textView.setTypeface(tabItem.typeFace);
             }
-    
+
             if (tabItem.fontSize != 0) {
                 textView.setTextSize(tabItem.fontSize);
             }
-    
+
             if (tabItem.color != 0) {
                 textView.setTextColor(tabItem.color);
-                mTabStrip.setShouldUpdateTabsTextColor(false);          
+                mTabStrip.setShouldUpdateTabsTextColor(false);
             }
         } else {
             textView.setVisibility(GONE);
@@ -281,14 +427,14 @@ public class BottomNavigationBar extends LinearLayout {
     private class TabClickListener implements OnClickListener {
         @Override
         public void onClick(View v) {
-             for (int i = 0; i < mTabStrip.getChildCount(); i++) {
-                 if (v == mTabStrip.getChildAt(i)) {
-                     if (onTap(i)) {
-                         setSelectedPosition(i);
-                     }
-                     return;
-                 }
-             }
+            for (int i = 0; i < mTabStrip.getChildCount(); i++) {
+                if (v == mTabStrip.getChildAt(i)) {
+                    if (onTap(i)) {
+                        setSelectedPosition(i);
+                    }
+                    return;
+                }
+            }
         }
     }
 }

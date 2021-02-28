@@ -25,6 +25,7 @@ import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 class TabStrip extends LinearLayout {
@@ -53,6 +54,8 @@ class TabStrip extends LinearLayout {
     private float mTabTextFontSize;
 
     private boolean mShouldUpdateTabsTextColor;
+
+    private float mTabNotificationTextFontSize;
 
     TabStrip(Context context) {
         this(context, null);
@@ -160,6 +163,26 @@ class TabStrip extends LinearLayout {
         for (int i = 0; i < childCount; i++){
             LinearLayout linearLayout = (LinearLayout)getChildAt(i);
             TextView textView = (TextView)linearLayout.getChildAt(1);
+            textView.setTextSize(mTabTextFontSize);
+        }
+    }
+
+
+    void setTabNotificationTextFontSize(float fontSize){
+        mTabNotificationTextFontSize = fontSize;
+        updateTabsNotificationTextFontSize();
+    }
+
+    float getTabNotificationTextFontSize(){
+        return mTabNotificationTextFontSize;
+    }
+
+    private void updateTabsNotificationTextFontSize(){
+        final int childCount = getChildCount();
+        for (int i = 0; i < childCount; i++){
+            LinearLayout linearLayout = (LinearLayout)getChildAt(i);
+            RelativeLayout relativeLayout  = (RelativeLayout)linearLayout.getChildAt(0);
+            TextView textView = (TextView)relativeLayout.getChildAt(1);
             textView.setTextSize(mTabTextFontSize);
         }
     }
