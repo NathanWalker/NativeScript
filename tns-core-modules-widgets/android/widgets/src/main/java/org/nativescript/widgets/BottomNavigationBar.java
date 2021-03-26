@@ -330,16 +330,22 @@ public class BottomNavigationBar extends LinearLayout {
         imgView.post(new Runnable() {
             @Override
             public void run() {
-                int width = imgView.getDrawable().getIntrinsicWidth();
-                if (width > 0) {
-                    RelativeLayout rl = (RelativeLayout) ll.getChildAt(0);
-                    RelativeLayout icon = (RelativeLayout) rl.getChildAt(1);
-                    RelativeLayout.LayoutParams old = (RelativeLayout.LayoutParams) icon.getLayoutParams();
-                    RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
-                            old.width, old.height
-                    );
-                    params.leftMargin = imgView.getWidth();
-                    icon.setLayoutParams(params);
+                if (imgView != null) {
+                    Drawable drawable = imgView.getDrawable();
+                    if (drawable != null) {
+                        int width = drawable.getIntrinsicWidth();
+
+                        if (width > 0) {
+                            RelativeLayout rl = (RelativeLayout) ll.getChildAt(0);
+                            RelativeLayout icon = (RelativeLayout) rl.getChildAt(1);
+                            RelativeLayout.LayoutParams old = (RelativeLayout.LayoutParams) icon.getLayoutParams();
+                            RelativeLayout.LayoutParams params = new RelativeLayout.LayoutParams(
+                                    old.width, old.height
+                            );
+                            params.leftMargin = imgView.getWidth();
+                            icon.setLayoutParams(params);
+                        }
+                    }
                 }
 
             }
