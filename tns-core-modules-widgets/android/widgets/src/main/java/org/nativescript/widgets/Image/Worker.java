@@ -27,7 +27,7 @@ import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.widget.ImageView;
 import java.lang.ref.WeakReference;
-
+import android.content.ContentResolver;
 /**
  * This class wraps up completing some arbitrary long running work when loading a bitmap to an
  * ImageView. It handles things like using a memory and disk cache, running the work in a background
@@ -37,6 +37,7 @@ public abstract class Worker {
 
     protected static final String RESOURCE_PREFIX = "res://";
     protected static final String FILE_PREFIX = "file:///";
+    protected static final String CONTENT_PREFIX = "content://";
 
     static final String TAG = "JS";
     private static final int FADE_IN_TIME = 200;
@@ -49,6 +50,7 @@ public abstract class Worker {
 
     protected boolean mPauseWork = false;
     protected Resources mResources;
+    protected ContentResolver mResolver;
 
     private static final int MESSAGE_CLEAR = 0;
     private static final int MESSAGE_INIT_DISK_CACHE = 1;
@@ -59,7 +61,7 @@ public abstract class Worker {
 
     protected Worker(Context context) {
         mResources = context.getResources();
-
+        mResolver = context.getContentResolver();
         // Negative means not initialized.
         if (debuggable < 0) {
             try {
