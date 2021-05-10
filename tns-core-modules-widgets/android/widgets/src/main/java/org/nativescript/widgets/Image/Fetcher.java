@@ -17,14 +17,17 @@
 package org.nativescript.widgets.image;
 
 import android.annotation.TargetApi;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Matrix;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.support.media.ExifInterface;
-// import androidx.exifinterface.media.ExifInterface;
+import androidx.exifinterface.media.ExifInterface;
+import android.net.Uri;
 import android.os.Build;
+import android.os.ParcelFileDescriptor;
+import android.os.RemoteException;
 import android.util.Log;
 import android.util.TypedValue;
 
@@ -33,7 +36,9 @@ import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileDescriptor;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -288,7 +293,9 @@ public class Fetcher extends Worker {
             Log.v(TAG, "process: " + uri);
         }
 
-        if (uri.startsWith(FILE_PREFIX)) {
+        if (uri.startsWith(CONTENT_PREFIX)) {
+            return decodeSampledBitmapFromContent(uri,mResolver , decodeWidth, decodeHeight, keepAspectRatio, getCache());
+        } else if (uri.startsWith(FILE_PREFIX)) {
             String filename = uri.substring(FILE_PREFIX.length());
             return decodeSampledBitmapFromFile(filename, decodeWidth, decodeHeight, keepAspectRatio, getCache());
         } else if (uri.startsWith(RESOURCE_PREFIX)) {
@@ -424,7 +431,7 @@ public class Fetcher extends Worker {
         return scaleAndRotateBitmap(bitmap, ei, reqWidth, reqHeight, keepAspectRatio);
     }
 
-    @TargetApi(Build.VERSION_CODES.N)
+
     private static ExifInterface getExifInterface(InputStream is) {
         ExifInterface ei = null;
         try {
@@ -442,6 +449,19 @@ public class Fetcher extends Worker {
                 } catch (IOException e) {
                 }
             }
+        }
+
+        return ei;
+    }
+
+    private static ExifInterface getExifInterface(FileDescriptor fd) {
+        ExifInterface ei = null;
+        try {
+            if (Utils.hasN()) {
+                ei = new ExifInterface(fd);
+            }
+        } catch (final Exception e) {
+            Log.e(TAG, "Error in reading bitmap - " + e);
         }
 
         return ei;
@@ -493,6 +513,65 @@ public class Fetcher extends Worker {
 
         return scaleAndRotateBitmap(bitmap, ei, reqWidth, reqHeight, keepAspectRatio);
     }
+
+
+
+    private static void closePfd(ParcelFileDescriptor pfd){
+        if(pfd != null){
+            try {
+                pfd.close();
+            } catch (IOException ignored) {}
+        }
+    }
+
+    /**
+     * Decode and sample down a bitmap from a file to the requested width and height.
+     *
+     * @param content The content uri of the file to decode
+     * @param reqWidth The requested width of the resulting bitmap
+     * @param reqHeight The requested height of the resulting bitmap
+     * @param cache The Cache used to find candidate bitmaps for use with inBitmap
+     * @return A bitmap sampled down from the original with the same aspect ratio and dimensions
+     *         that are equal to or greater than the requested width and height
+     */
+    public static Bitmap decodeSampledBitmapFromContent(String content, ContentResolver resolver, int reqWidth, int reqHeight,
+                                                        boolean keepAspectRatio, Cache cache) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+
+
+        Uri uri = android.net.Uri.parse(content);
+        ParcelFileDescriptor pfd = null;
+        try {
+            pfd = resolver.openFileDescriptor(uri, "r");
+            BitmapFactory.decodeFileDescriptor(pfd.getFileDescriptor(), null, options);
+        } catch (FileNotFoundException e) {
+            Log.v(TAG, "File not found " + content);
+            closePfd(pfd);
+            return null;
+        }
+
+
+        options.inSampleSize = calculateInSampleSize(options.outWidth, options.outHeight, reqWidth, reqHeight);
+
+        // If we're running on Honeycomb or newer, try to use inBitmap
+        if (Utils.hasHoneycomb()) {
+            addInBitmapOptions(options, cache);
+        }
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+
+        final Bitmap bitmap = BitmapFactory.decodeFileDescriptor(pfd.getFileDescriptor(), null, options);
+
+        ExifInterface ei = getExifInterface(pfd.getFileDescriptor());
+        closePfd(pfd);
+
+        return scaleAndRotateBitmap(bitmap, ei, reqWidth, reqHeight, keepAspectRatio);
+    }
+
 
     private static Bitmap scaleAndRotateBitmap(Bitmap bitmap, ExifInterface ei, int reqWidth, int reqHeight,
             boolean keepAspectRatio) {
